@@ -1,0 +1,163 @@
+﻿SEButton<LT>[10,10,10,10](Size="100,100",OnMouseEnter="PPC",OnMouseDown="PMW",OnInit="IC",OnKeyPress="PKinput"){
+    SELabel<RT>[10,10,10,10](OnInit="EC"){
+        Script @C{
+            public static void EC(SEControl c){
+                var p = c as SELabel;
+                p.Text = "hello!!";
+            }
+        }
+    }
+    Script @C{
+        public static void PPC(){ 
+            SELogger.Log("鼠标进入控件");
+        }
+        public static void PMW(){ 
+            SELogger.Log("鼠标按下");
+        } 
+        public static void IC(SEControl c){
+            c.Spirit = new SESpirit();
+            c.Spirit.Load(new SEImageFile());
+            c.Spirit.BaseImage.CreateWithColor(100, 100, SEColor.DarkCyan);
+            //c.Spirit.Load();
+            //GVariables.FontRenderer.RenderText(c.Spirit.BaseImage,"Helloworld",GVariables.FontRenderer.LoadFontFromFile("E:/萝莉体 第二版.ttf",180),SEColor.White);
+            tsc = c;
+        }
+        static SEControl tsc;
+        //static bool cl = false;
+        public static void PKinput(Keys k){
+            SELogger.Log("按下了键盘：" + k.ToString());
+            if(k == Keys.Escape)
+            {
+                GVariables.MainWindow.Close();
+            }
+            if ((k == Keys.A))
+                {
+                    //IsCursorLocked = true;
+                    GVariables.MainWindow.LockCursor(true);
+                }
+                if ( (k == Keys.S))
+                {
+                    //IsCursorLocked = false;
+                    GVariables.MainWindow.LockCursor(false);
+                }
+                if ( (k == Keys.Z))
+                {
+                    //IsEndlessCursorMove = true;
+                    GVariables.MainWindow.SetCursorEndlessMove(true);
+                }
+                if ( (k == Keys.X))
+                {
+                    //IsEndlessCursorMove = false;
+                    GVariables.MainWindow.SetCursorEndlessMove(false);
+                }
+                if ( (k == Keys.LControlKey))
+                {
+                    GVariables.MainWindow.ShowCursor(true);
+                }
+                if ( (k == Keys.CapsLock))
+                {
+                    GVariables.MainWindow.ShowCursor(false);
+                }
+                if ( (k == Keys.F1))
+                {
+                    GVariables.MainWindow.UseVirtualCursorInput(true);
+                }
+                if ( (k == Keys.F2))
+                {
+                    GVariables.MainWindow.UseVirtualCursorInput(false);
+                }
+                if ( (k == Keys.F3))
+                {
+                    GVariables.MainWindow.UseLogicCursorInput(true);
+                }
+                if ( (k == Keys.F4))
+                {
+                    GVariables.MainWindow.UseLogicCursorInput(false);
+                }
+                if ( (k == Keys.F11))
+                {
+                    GVariables.MainWindow.SetFullScreen(true);
+                }
+                if ( (k == Keys.F12))
+                {
+                    GVariables.MainWindow.SetFullScreen(false);
+                }
+                if ( (k == Keys.D0))
+                {
+                    GVariables.MainWindow.SetMonitorIndex(0);
+                }
+                if ( (k == Keys.D1))
+                {
+                    GVariables.MainWindow.SetMonitorIndex(1);
+                }
+                if ( (k == Keys.D2))
+                {
+                    GVariables.MainWindow.SetMonitorIndex(2);
+                }
+                if ( (k == Keys.D3))
+                {
+                    GVariables.MainWindow.SetMonitorIndex(3);
+                }
+                if ( (k == Keys.O))
+                {
+                    BasicInput.JoyStickLeftMotorSpeed = 65535;
+                }
+                else
+                {
+                    BasicInput.JoyStickLeftMotorSpeed = 0;
+                }
+                if ( (k == Keys.P))
+                {
+                    BasicInput.JoyStickRightMotorSpeed = 65535;
+                }
+                else
+                {
+                    BasicInput.JoyStickRightMotorSpeed = 0;
+                }
+            if ( (k == Keys.Up))
+                {
+                    if (BasicInput.IfKeyDown( Keys.J))
+                    {
+                        //Console.WriteLine("R++ : " + (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X);
+                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X += 1;
+                    }
+                    if (BasicInput.IfKeyDown(Keys.K))
+                    {
+                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Y += 1;
+                    }
+                    if (BasicInput.IfKeyDown(Keys.L))
+                    {
+                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Z += 1;
+                    }
+                }
+                if ( (k == Keys.Down))
+                {
+                    if (BasicInput.IfKeyDown(Keys.J))
+                    {
+                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X -= 0.1;
+                    }
+                    if (BasicInput.IfKeyDown(Keys.K))
+                    {
+                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Y -= 0.1;
+                    }
+                    if (BasicInput.IfKeyDown(Keys.L))
+                    {
+                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Z -= 0.1;
+                    }
+                }
+                if ( (k == Keys.Back))
+                {
+                    SEMonitor.AllowLog = !SEMonitor.AllowLog;
+                        SELogger.Log("是否显示信息:" + SEMonitor.AllowLog);
+                }
+                if (k == Keys.Left)
+                {
+                    tsc.Angle -= 10;
+                }
+                if (k == Keys.Right)
+                {
+                    tsc.Angle += 10;
+                }
+        }
+    }
+}

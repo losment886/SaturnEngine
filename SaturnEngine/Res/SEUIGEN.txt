@@ -1,0 +1,39 @@
+﻿%INC%
+using System;
+using System.IO;
+using SaturnEngine.Asset;
+using SaturnEngine.Base;
+using SaturnEngine.Global;
+using SaturnEngine.Management;
+using SaturnEngine.Management.Event;
+using SaturnEngine.Management.IO;
+using SaturnEngine.Management.SEMemory;
+using SaturnEngine.Performance;
+using SaturnEngine.Physics;
+using SaturnEngine.Platform;
+using SaturnEngine.SEAudio;
+using SaturnEngine.Components;
+using SaturnEngine.Security;
+using SaturnEngine.SEErrors;
+using SaturnEngine.SEGraphics;
+using SaturnEngine.SEInput;
+using SaturnEngine.SEMath;
+using SaturnEngine.SEUI;
+using SaturnEngine.SEUIControls;
+using SaturnEngine.ScriptEngine;
+using System.Threading;
+using System.Net;
+%INC%
+
+%GEN%
+List<SEControl> %VLI% = new List<SEControl>();
+
+%GEN%
+
+%PEC%
+%TGN% %VIL% = new %TGN%();
+%VIL%.Size = new Vector2D(%W%, %H%);
+%VIL%.Border = new SEBorder(%L%,%T%,%R%,%B%);
+%VIL%.Bind = SEAnchor.%ACH%;
+%VIL%.AllowHorizontalLayout = %AHL%;
+%PEC%

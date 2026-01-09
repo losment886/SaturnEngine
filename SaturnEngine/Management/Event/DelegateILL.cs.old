@@ -1,0 +1,209 @@
+﻿using SaturnEngine.Base;
+using System.Reflection;
+
+namespace SaturnEngine.Management.Event
+{
+    [Obsolete("Use DelegateQueue instead for better performance and safety.")]
+    public class DelegateILL : SEBase
+    {
+
+        public bool IsInvoking { get => invk; }
+        struct DILpkg
+        {
+            public dynamic tsk;
+            public Functype ft;
+            public dynamic[] args;
+            public DILpkg(dynamic t, Functype f, dynamic[] a)
+            {
+                tsk = t;
+                ft = f;
+                args = a;
+            }
+        }
+
+        List<DILpkg> tasks;
+
+
+        List<DILpkg> taskscac;
+
+
+        bool invk = false;
+        public enum Functype
+        {
+            NoReturn = 0,
+            HasReturn = 1,
+
+        }
+        public DelegateILL(string nm)
+            : base(nm, nm + "'s DelegateILL")
+        {
+            tasks = new List<DILpkg>();
+
+            taskscac = new List<DILpkg>();
+
+        }
+        public void Clean()
+        {
+            tasks.Clear();
+        }
+        public void Add(Action a)
+        {
+            AddEvent(a, []);
+        }
+        public void Add<T>(Action<T> a, dynamic[] args)
+        {
+            AddEvent(a, args);
+        }
+        public void Add<T1, T2>(Action<T1, T2> a, dynamic[] args)
+        {
+            AddEvent(a, args);
+        }
+        public void Add<T1, T2, T3>(Action<T1, T2, T3> a, dynamic[] args)
+        {
+            AddEvent(a, args);
+        }
+        public void Add<T1, T2, T3, T4>(Action<T1, T2, T3, T4> a, dynamic[] args)
+        {
+            AddEvent(a, args);
+        }
+        public void Add<To>(Func<To> f)
+        {
+            AddEvent(f, [], Functype.HasReturn);
+        }
+        public void Add<T1, To>(Func<T1, To> f, dynamic[] args)
+        {
+            AddEvent(f, args, Functype.HasReturn);
+        }
+        public void Add<T1, T2, To>(Func<T1, T2, To> f, dynamic[] args)
+        {
+            AddEvent(f, args, Functype.HasReturn);
+        }
+        public void Add<T1, T2, T3, To>(Func<T1, T2, T3, To> f, dynamic[] args)
+        {
+            AddEvent(f, args, Functype.HasReturn);
+        }
+        public void Add<T1, T2, T3, T4, To>(Func<T1, T2, T3, T4, To> f, dynamic[] args)
+        {
+            AddEvent(f, args, Functype.HasReturn);
+        }
+        public void AddEvent(dynamic func, dynamic[] args, Functype co = Functype.NoReturn)
+        {
+            if(args == null)
+                throw new ArgumentNullException("args");
+            DILpkg p = new DILpkg(func, co, args);
+            if (invk)
+            {
+                if (taskscac.IndexOf(p) < 0)
+                {
+                    taskscac.Add(p);
+                    return;
+                }
+
+
+
+            }
+            else
+            {
+                if (tasks.IndexOf(p) < 0)
+                {
+                    tasks.Add(p);
+                    return;
+                }
+
+
+
+            }
+        }
+        public void ProcessEvent()
+        {
+            while (taskscac.Count > 0)
+            {
+                try
+                {
+                    tasks.Add(taskscac[0]);
+                    taskscac.RemoveAt(0);
+                }
+                catch (Exception ex)
+                {
+                    // + Name + " when process Event!!!"
+                    SELogger.Error(new Str([new Str("Error in ", new Str.StrStyle(Asset.SEColor.Red)), new Str(Name, new Str.StrStyle(Asset.SEColor.Blue)), new Str(" when process Event!!!", new Str.StrStyle(Asset.SEColor.Red)), ex.ToString()]));
+                }
+            }
+        }
+        private void InvokeAction(dynamic action, dynamic[] args)
+        {
+            try
+            {
+                if (action == null)
+                    return;
+                MethodInfo method = action.GetType().GetMethod("Invoke");
+                method.Invoke(action, args);
+            }
+            catch (Exception ex)
+            {
+                SELogger.Error(new Str([new Str("Error in ", new Str.StrStyle(Asset.SEColor.Red)), new Str(Name, new Str.StrStyle(Asset.SEColor.Blue)), new Str(" when invoke action!!!", new Str.StrStyle(Asset.SEColor.Red)), ex.ToString()]));
+            }
+        }
+
+        private dynamic InvokeFunc(dynamic func, dynamic[] args)
+        {
+            try
+            {
+                if(func == null)
+                    return null;
+                MethodInfo method = func.GetType().GetMethod("Invoke");
+                return method.Invoke(func, args);
+            }
+            catch (Exception ex)
+            {
+                SELogger.Error(new Str([new Str("Error in ", new Str.StrStyle(Asset.SEColor.Red)), new Str(Name, new Str.StrStyle(Asset.SEColor.Blue)), new Str(" when process func!!!", new Str.StrStyle(Asset.SEColor.Red)), ex.ToString()]));
+                return null;
+            }
+        }
+        public dynamic InvokeOne()
+        {
+            invk = true;
+            DILpkg p = tasks[0];
+            dynamic f = p.tsk;
+            tasks.RemoveAt(0);
+            Functype co = p.ft;// = taskargco.Pop();
+            dynamic[] args = p.args;// = taskargs.Pop();
+            if (co == Functype.NoReturn)
+            {
+                InvokeAction(f, args);
+            }
+            else
+            {
+                return InvokeFunc(f, args);
+            }
+            invk = false;
+            return null;
+        }
+        public void InvokeAll()
+        {
+            invk = true;
+            dynamic f;// = tasks.Pop();
+            Functype co;// = taskargco.Pop();
+            dynamic[] args;// = taskargs.Pop();
+            DILpkg p;
+            while (tasks.Count > 0)
+            {
+                p = tasks[0];
+                f = p.tsk;
+                tasks.RemoveAt(0);
+                co = p.ft;
+
+                args = p.args;
+                if (co == Functype.NoReturn)
+                {
+                    InvokeAction(f, args);
+                }
+                else
+                {
+                    InvokeFunc(f, args);
+                }
+            }
+            invk = false;
+        }
+    }
+}
