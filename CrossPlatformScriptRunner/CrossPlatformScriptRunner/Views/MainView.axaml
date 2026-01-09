@@ -1,0 +1,66 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CrossPlatformScriptRunner.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="CrossPlatformScriptRunner.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             Name="ThisUserControl"
+             SizeChanged="ThisUserControl_SizeChanged"
+             Loaded="LoadedThis">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+  
+    <Canvas
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
+
+        <StackPanel Canvas.Top="0" Canvas.Left="0" Height="30" Spacing="10" Orientation="Horizontal">
+            <!--工具栏-->
+            <Button Content="文件">
+                <Button.Flyout>
+                    <MenuFlyout Placement="Bottom">
+						<MenuItem Header="新建" InputGesture="Ctrl+N" Command="{Binding Clicked_BTN}" CommandParameter="F_N"/>
+                        <MenuItem Header="打开" InputGesture="Ctrl+O" Command="{Binding Clicked_BTN}" CommandParameter="F_O"/>
+                        <MenuItem Header="保存" InputGesture="Ctrl+S" Command="{Binding Clicked_BTN}" CommandParameter="F_S"/>
+                        <MenuItem Header="另存为" InputGesture="Ctrl+Shift+S" Command="{Binding Clicked_BTN}" CommandParameter="F_SA"/>
+                    </MenuFlyout>
+               </Button.Flyout>
+            </Button>
+            <Button Content="运行">
+                <Button.Flyout>
+                    <MenuFlyout Placement="Bottom">
+						<MenuItem Header="编译当前文档" InputGesture="Ctrl+B" Command="{Binding Clicked_BTN}" CommandParameter="R_B"/>
+                        <MenuItem Header="编译全部文档" InputGesture="Ctrl+Shift+B" Command="{Binding Clicked_BTN}" CommandParameter="R_BA"/>
+                        <MenuItem Header="运行当前文档" InputGesture="Ctrl+R" Command="{Binding Clicked_BTN}" CommandParameter="R_R"/>
+                        <MenuItem Header="运行全部文档" InputGesture="Ctrl+Shift+R" Command="{Binding Clicked_BTN}" CommandParameter="R_RA"/>
+                    </MenuFlyout>
+               </Button.Flyout>
+            </Button>
+            <Button Content="帮助">
+                <Button.Flyout>
+                    <MenuFlyout Placement="Bottom">
+                        <MenuItem Header="查看帮助文档" InputGesture="Ctrl+H" Command="{Binding Clicked_BTN}" CommandParameter="H_W"/>
+                        <MenuItem Header="检查更新" InputGesture="Ctrl+U" Command="{Binding Clicked_BTN}" CommandParameter="H_U"/>
+                        <MenuItem Header="反馈与支持" InputGesture="Ctrl+F" Command="{Binding Clicked_BTN}" CommandParameter="H_F"/>
+                        <MenuItem Header="设置" InputGesture="Ctrl+P" Command="{Binding Clicked_BTN}" CommandParameter="H_O"/>
+                        <MenuItem Header="关于" InputGesture="Ctrl+I" Command="{Binding Clicked_BTN}" CommandParameter="H_A"/>
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
+            <ComboBox Name="CurrentFileComboBox" Width="600" ItemsSource="{Binding CurrentFiles}">
+				
+            </ComboBox>
+        </StackPanel>
+        <ScrollViewer Name ="FileEditArea" Canvas.Top="30" Canvas.Left="0">
+            <TextBox Name="FileEditer" Text="{Binding FileEditAreaText}" AcceptsReturn="True" Watermark="// Your script goes here." TextWrapping="Wrap"></TextBox>
+        </ScrollViewer>
+
+    </Canvas>
+  
+
+</UserControl>

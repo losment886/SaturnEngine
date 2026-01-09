@@ -1,0 +1,154 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LRLPackager.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="LRLPackager.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+  
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/> <!-- 工具栏行 -->
+      <RowDefinition Height="*"/>    <!-- 内容区域行 -->
+    </Grid.RowDefinitions>
+    
+    <!-- 工具栏 -->
+    <StackPanel Grid.Row="0" Height="30" Spacing="10" Orientation="Horizontal" Margin="5">
+      <Button Content="文件">
+        <Button.Flyout>
+          <MenuFlyout Placement="Bottom">
+            <MenuItem Header="新建" InputGesture="Ctrl+N" Command="{Binding Clicked_BTN}" CommandParameter="F_N"/>
+            <MenuItem Header="打开" InputGesture="Ctrl+O" Command="{Binding Clicked_BTN}" CommandParameter="F_O"/>
+            <MenuItem Header="保存" InputGesture="Ctrl+S" Command="{Binding Clicked_BTN}" CommandParameter="F_S"/>
+            <MenuItem Header="另存为" InputGesture="Ctrl+Shift+S" Command="{Binding Clicked_BTN}" CommandParameter="F_SA"/>
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
+      <Button Content="操作">
+        <Button.Flyout>
+          <MenuFlyout Placement="Bottom">
+            <MenuItem Header="添加文件" InputGesture="Ctrl+A" Command="{Binding Clicked_BTN}" CommandParameter="O_A"/>
+            <MenuItem Header="删除所选文件" InputGesture="Ctrl+D" Command="{Binding Clicked_BTN}" CommandParameter="O_D"/>
+            <MenuItem Header="导出所选文件" InputGesture="Ctrl+E" Command="{Binding Clicked_BTN}" CommandParameter="O_E"/>
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
+      <Button Content="帮助">
+        <Button.Flyout>
+          <MenuFlyout Placement="Bottom">
+            <MenuItem Header="查看帮助文档" InputGesture="Ctrl+H" Command="{Binding Clicked_BTN}" CommandParameter="H_W"/>
+            <MenuItem Header="检查更新" InputGesture="Ctrl+U" Command="{Binding Clicked_BTN}" CommandParameter="H_U"/>
+            <MenuItem Header="反馈与支持" InputGesture="Ctrl+F" Command="{Binding Clicked_BTN}" CommandParameter="H_F"/>
+            <MenuItem Header="设置" InputGesture="Ctrl+P" Command="{Binding Clicked_BTN}" CommandParameter="H_O"/>
+            <MenuItem Header="关于" InputGesture="Ctrl+I" Command="{Binding Clicked_BTN}" CommandParameter="H_A"/>
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
+    </StackPanel>
+    
+    <!-- 内容区域 -->
+    <Grid Grid.Row="1" Margin="5">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" MinWidth="200"/> <!-- 文件列表区域 -->
+        <ColumnDefinition Width="5"/> <!-- 分隔条间距 -->
+        <ColumnDefinition Width="*" MinWidth="200"/> <!-- 文件属性区域 -->
+      </Grid.ColumnDefinitions>
+      
+      <!-- 文件内容列表区域 -->
+      <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1">
+        <ScrollViewer>
+          <ListBox Name="FileContentListBox" ItemsSource="{Binding Items}">
+          </ListBox>
+        </ScrollViewer>
+      </Border>
+      
+      <!-- 分隔条（可选） -->
+      <GridSplitter Grid.Column="1" Width="5" Background="LightGray" HorizontalAlignment="Stretch"/>
+      
+      <!-- 文件属性区域 -->
+      <Border Grid.Column="2" BorderBrush="Gray" BorderThickness="1" Padding="15">
+        <ScrollViewer>
+          <StackPanel>
+            <TextBlock Text="文件属性" FontSize="16" FontWeight="Bold" Margin="0 0 0 15"/>
+            
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="100"/>
+                  <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              
+              <!-- 文件名 -->
+              <TextBlock Text="文件名:" Grid.Row="0" Grid.Column="0" 
+                         VerticalAlignment="Center" Margin="0 0 10 10" FontWeight="Medium"/>
+              <TextBox Text="{Binding InlineFileName}" Grid.Row="0" Grid.Column="1"  Grid.ColumnSpan="4"
+                       Margin="0 0 0 10" IsReadOnly="True"/>
+              
+              <!-- 添加日期 -->
+              <TextBlock Text="添加日期:" Grid.Row="1" Grid.Column="0" 
+                         VerticalAlignment="Center" Margin="0 0 10 10" FontWeight="Medium"/>
+              <TextBox Text="{Binding InlineFileTime}" Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="4"
+                       Margin="0 0 0 10" IsReadOnly="True"/>
+              
+              <!-- 修改日期 -->
+              <TextBlock Text="修改日期:" Grid.Row="2" Grid.Column="0" 
+                         VerticalAlignment="Center" Margin="0 0 10 10" FontWeight="Medium"/>
+              <TextBox Text="{Binding InlineFileTime}" Grid.Row="2" Grid.Column="1"  Grid.ColumnSpan="4"
+                       Margin="0 0 0 10" IsReadOnly="True"/>
+              
+              <!-- 文件大小 -->
+              <TextBlock Text="文件大小:" Grid.Row="3" Grid.Column="0" 
+                         VerticalAlignment="Center" Margin="0 0 10 10" FontWeight="Medium"/>
+              <TextBox Text="{Binding InlineFileSize}" Grid.Row="3" Grid.Column="1"  Grid.ColumnSpan="4"
+                       Margin="0 0 0 10" IsReadOnly="True"/>
+              
+              <!-- 是否加密 -->
+              <TextBlock Text="是否加密:" Grid.Row="4" Grid.Column="0" 
+                         VerticalAlignment="Center" Margin="0 0 10 10" FontWeight="Medium"/>
+              <CheckBox IsChecked="{Binding InlineFileEnc}" Grid.Row="4" Grid.Column="1" 
+                        Margin="0 0 0 10" IsEnabled="False" VerticalAlignment="Center"/>
+              <!-- 是否加密 -->
+              <TextBlock Text="是否压缩:" Grid.Row="4" Grid.Column="2" 
+                         VerticalAlignment="Center" Margin="0 0 10 10" FontWeight="Medium"/>
+              <CheckBox IsChecked="{Binding InlineFileCom}" Grid.Row="4" Grid.Column="3" 
+                        Margin="0 0 0 10" IsEnabled="False" VerticalAlignment="Center"/>
+              
+              <!-- 文件类型 -->
+              <TextBlock Text="文件类型:" Grid.Row="5" Grid.Column="0" 
+                         VerticalAlignment="Center" Margin="0 0 10 10" FontWeight="Medium"/>
+              <TextBox Text="{Binding InlineFileType}" Grid.Row="5" Grid.Column="1"  Grid.ColumnSpan="4"
+                       Margin="0 0 0 10" IsReadOnly="True"/>
+              
+              <!-- 其他属性区域 -->
+              <Border Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" 
+                      BorderThickness="0 1 0 0" Margin="0 15 0 0" Padding="0 10 0 0">
+                <StackPanel>
+                  <TextBlock Text="其他属性" FontWeight="Medium" Margin="0 0 0 10"/>
+                  <TextBox Text="{Binding InlineFileAttr}" 
+                           AcceptsReturn="True" TextWrapping="Wrap" 
+                           Height="120" IsReadOnly="True"/>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

@@ -1,0 +1,774 @@
+﻿using SaturnEngine.Global;
+using SaturnEngine.Management.IO;
+using SaturnEngine.Security;
+using SaturnEngine.SEErrors;
+using SaturnEngine.SEMath;
+using System.Runtime.InteropServices;
+using static SaturnEngine.SEMath.Helper;
+
+namespace SaturnEngine.Asset
+{
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TIME
+    {
+        public ushort YEAR;
+        public byte MONTH;
+        public byte DAY;
+        public byte HOUR;
+        public byte MINUTE;
+        public byte SECOND;
+        public byte MILLISECOND;
+        public TIME(ulong CAT)
+        {
+            DataLayout dl = new DataLayout();
+            dl.UL = CAT;
+            YEAR = dl.US0;
+            MONTH = dl.B2;
+            DAY = dl.B3;
+            HOUR = dl.B4;
+            MINUTE = dl.B5;
+            SECOND = dl.B6;
+            MILLISECOND = dl.B7;
+        }
+        public TIME(DateTime DT)
+        {
+            YEAR = (ushort)DT.Year;
+            MONTH = (byte)DT.Month;
+            DAY = (byte)DT.Day;
+            HOUR = (byte)DT.Hour;
+            MINUTE = (byte)DT.Minute;
+            SECOND = (byte)DT.Second;
+            MILLISECOND = (byte)DT.Millisecond;
+        }
+        public DateTime GetDateTime()
+        {
+            try
+            {
+                return new DateTime(YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, MILLISECOND);
+            }
+            catch
+            {
+                return new DateTime();
+            }
+        }
+        public ulong GetTimeCode()
+        {
+            DataLayout dl = new DataLayout();
+            dl.US0 = YEAR;
+            dl.B2 = MONTH;
+            dl.B3 = DAY;
+            dl.B4 = HOUR;
+            dl.B5 = MINUTE;
+            dl.B6 = SECOND;
+            dl.B7 = MILLISECOND;
+            return dl.UL;
+        }
+    }
+    public struct VERSION
+    {
+        public byte Major;
+        public byte Minor;
+        public byte Build;
+        public byte Revision;
+
+
+        public VERSION(Version v)
+        {
+            Major = (byte)v.Major;
+            Minor = (byte)v.Minor;
+            Build = (byte)v.Build;
+            Revision = (byte)v.Revision;
+        }
+        public VERSION(uint v)
+        {
+            DataLayout dl = new DataLayout();
+            dl.UI0 = v;
+            Major = dl.B0;
+            Minor = dl.B1;
+            Build = dl.B2;
+            Revision = dl.B3;
+        }
+
+        public Version GetVersion()
+        {
+            return new Version(Major, Minor, Build, Revision);
+        }
+
+        public uint GetVersionCode()
+        {
+            DataLayout dl = new DataLayout();
+
+            dl.B0 = Major;
+            dl.B1 = Minor;
+            dl.B2 = Build;
+            dl.B3 = Revision;
+            return dl.UI0;
+        }
+
+    }
+    public unsafe class SERBlock
+    {
+        public SEResource Father;
+        public ulong StartIndex;//blokstart
+        public ulong NAMESTC;
+        public TIME Time;
+        public ushort Type;
+        public ushort Flag;//default=0,lock=1
+        public ulong PasswordSTCSTC;
+        public uint crc32;
+
+        public FILE thisFile;
+
+        public MemoryStream Context;
+    }
+    //SE包文件
+    //默认后缀为*.spk
+    //不限制后缀
+    //define
+    /* [HEAD]
+     * SESF(4b) VER(4b=>0x00 0x00 0x00 0x01==("0.0.0.1") => struct VERSION) DATETIME(8B => struct TIME)
+     * DEVELOPSTC  FLG4b BOKCOU4b       CRC32CODE4b
+     * [END]（36B）
+     * 
+     * [PACKAGE]
+     * SEPK（4B）
+     * NAMESTC TIME  TYP2b  FLG2b  PASSSTCSTC8b  CRC32
+     * LENGTH
+     * DATA(4B)
+     * [END]（48B）
+     * 
+     * TIP:
+     * block lock=>
+     * if i%2=>b+B0-B2
+     * if i%3=>b+B1-B3
+     * if i%5=>b+B4-B6
+     * if i%7=>b+B5-B7
+     */
+    [Obsolete("Use LRL instead of this")]
+    public class SEResource
+    {
+        public enum SERFLG : uint
+        {
+            Empty = 0,
+
+            FEATURE_Support = 1,
+
+            FEETURE_AllowOverBlock = 2,
+            FEATURE_AllowCrossFile = 4,
+            FEATURE_AllowStreaming = 8,
+            FEATURE_Compress = 16
+        }
+
+        public const string Ext = ".spk";
+        public string FilePath;
+        public MemoryStream MainStream;
+        public VERSION Version;
+        public TIME Time;
+        public ulong DeveloperSTC;
+        public SERFLG Flag;
+        public uint CRC32CODE;
+        public uint BlockCount;
+
+
+
+        public SERBlock[] Blocks;
+
+        public bool NewFile;
+
+        public uint AddNewBlock(string bname, bool locked = false, string password = "")
+        {
+            if (BlockCount > 1)
+            {
+                SERBlock sb = new SERBlock();
+                sb.NAMESTC = STCCode.GetSTC(bname);
+                ulong psi = 0;
+                psi = (ulong)Blocks[BlockCount - 1].StartIndex + Blocks[BlockCount - 1].thisFile.Length + 48ul;
+                sb.StartIndex = psi;
+                sb.Father = this;
+                sb.Flag = 0;
+                sb.Time = new TIME(DateTime.Now);
+                sb.PasswordSTCSTC = 0;
+                MemoryStream ms = new MemoryStream();
+                if (locked)
+                {
+                    sb.Flag = 1;
+                    sb.PasswordSTCSTC = STCCode.GetSTC(password);
+
+                }
+                sb.Context = ms;
+                Blocks = Blocks.Append(sb).ToArray();
+                BlockCount++;
+                return (uint)Blocks.LongLength - 1;
+            }
+            else
+            {
+                SERBlock sb = new SERBlock();
+                sb.NAMESTC = STCCode.GetSTC(bname);
+                ulong psi = 0;
+                psi = (ulong)36 + 48ul;
+                sb.StartIndex = psi;
+                sb.Father = this;
+                sb.Flag = 0;
+                sb.Time = new TIME(DateTime.Now);
+                sb.PasswordSTCSTC = 0;
+                MemoryStream ms = new MemoryStream();
+                if (locked)
+                {
+                    sb.Flag = 1;
+                    sb.PasswordSTCSTC = STCCode.GetSTC(password);
+
+                }
+                sb.Context = ms;
+                Blocks = Blocks.Append(sb).ToArray();
+                BlockCount++;
+                return (uint)Blocks.LongLength - 1;
+            }
+        }
+
+        public uint AddNewBlock(ulong bname_stc, bool locked = false, string password = "")
+        {
+            if (BlockCount > 1)
+            {
+                SERBlock sb = new SERBlock();
+                sb.NAMESTC = (bname_stc);
+                ulong psi = 0;
+                psi = (ulong)Blocks[BlockCount - 1].StartIndex + Blocks[BlockCount - 1].thisFile.Length + 48ul;
+                sb.StartIndex = psi;
+                sb.Father = this;
+                sb.Flag = 0;
+                sb.Time = new TIME(DateTime.Now);
+                sb.PasswordSTCSTC = 0;
+                MemoryStream ms = new MemoryStream();
+                if (locked)
+                {
+                    sb.Flag = 1;
+                    sb.PasswordSTCSTC = STCCode.GetSTC(password);
+
+                }
+                sb.Context = ms;
+                Blocks = Blocks.Append(sb).ToArray();
+                BlockCount++;
+                return (uint)Blocks.LongLength - 1;
+            }
+            else
+            {
+                SERBlock sb = new SERBlock();
+                sb.NAMESTC = (bname_stc);
+                ulong psi = 0;
+                psi = (ulong)36 + 48ul;
+                sb.StartIndex = psi;
+                sb.Father = this;
+                sb.Flag = 0;
+                sb.Time = new TIME(DateTime.Now);
+                sb.PasswordSTCSTC = 0;
+                MemoryStream ms = new MemoryStream();
+                if (locked)
+                {
+                    sb.Flag = 1;
+                    sb.PasswordSTCSTC = STCCode.GetSTC(password);
+
+                }
+                sb.Context = ms;
+                Blocks = Blocks.Append(sb).ToArray();
+                BlockCount++;
+                return (uint)Blocks.LongLength - 1;
+            }
+        }
+        public void RemoveBlock(string name)
+        {
+            long ps = 0;
+            ulong stc = STCCode.GetSTC(name);
+            for (long i = 0; i < BlockCount; i++)
+            {
+                if (Blocks[i].NAMESTC == stc)
+                {
+                    ps = i;
+                    break;
+                }
+            }
+            List<SERBlock> t = Blocks.ToList();
+            t.RemoveAt((int)ps);
+            Blocks = t.ToArray();
+            BlockCount--;
+        }
+
+        ~SEResource()
+        {
+            if (MainStream != null)
+            {
+                MainStream.Dispose();
+                Blocks = null;
+                GC.Collect();
+            }
+        }
+
+        public SEResource(string path)//反正用来存脚本，配置文件，图标等的，性能不太重要的吧（
+        {
+            FilePath = path;
+            NewFile = false;
+            Stream FILEs = File.Open(path, FileMode.OpenOrCreate);
+            MemoryStream ms = new MemoryStream();
+            byte[] bft = new byte[GVariables.DefaultBufferSize];
+            int rd = 0;
+            rd = FILEs.Read(bft, 0, bft.Length);
+            while (rd > 0)
+            {
+                ms.Write(bft, 0, rd);
+                rd = FILEs.Read(bft, 0, bft.Length);
+            }
+
+
+            ms.Seek(0, SeekOrigin.Begin);
+            MainStream = ms;
+            BinaryOperator br = new BinaryOperator(MainStream);
+
+            if (br.Length < 8)
+            {
+                NewFile = true;
+                Version = new VERSION(GVariables.SERVersion);
+                Time = new TIME(DateTime.Now);
+                DeveloperSTC = STCCode.GetSTC(GVariables.Developer);
+                Flag = SERFLG.Empty;
+                BlockCount = 0;
+                Blocks = new SERBlock[0];
+                byte[] b = new byte[36];
+                b[0] = (byte)'S';
+                b[1] = (byte)'E';
+                b[2] = (byte)'S';
+                b[3] = (byte)'F';
+                b[4] = Version.Major;
+                b[5] = Version.Minor;
+                b[6] = Version.Build;
+                b[7] = Version.Revision;
+                DataLayout dl = new DataLayout();
+                dl.UL = Time.GetTimeCode();
+                b[8] = dl.B0;
+                b[9] = dl.B1;
+                b[10] = dl.B2;
+                b[11] = dl.B3;
+                b[12] = dl.B4;
+                b[13] = dl.B5;
+                b[14] = dl.B6;
+                b[15] = dl.B7;
+                dl.UL = DeveloperSTC;
+                b[16] = dl.B0;
+                b[17] = dl.B1;
+                b[18] = dl.B2;
+                b[19] = dl.B3;
+                b[20] = dl.B4;
+                b[21] = dl.B5;
+                b[22] = dl.B6;
+                b[23] = dl.B7;
+                dl.UI0 = (uint)Flag;
+                b[24] = dl.B0;
+                b[25] = dl.B1;
+                b[26] = dl.B2;
+                b[27] = dl.B3;
+                dl.UI0 = BlockCount;
+                b[28] = dl.B0;
+                b[29] = dl.B1;
+                b[30] = dl.B2;
+                b[31] = dl.B3;
+                dl.UI0 = CRC32.GetCRC32(b, 0, 32);
+                b[32] = dl.B0;
+                b[33] = dl.B1;
+                b[34] = dl.B2;
+                b[35] = dl.B3;
+                FILEs.Write(b, 0, b.Length);
+                FILEs.Flush();
+                FILEs.Position = 0;
+                FILEs.Close();
+            }
+            else
+            {
+                if (br.ReadByte() != 'S' || br.ReadByte() != 'E' || br.ReadByte() != 'S' || br.ReadByte() != 'F')
+                {
+                    //string vb = "";
+                    //vb.GetHashCode();
+                    throw new Exception("文件损坏或不是SER文件");
+                }
+                Version = new VERSION(br.ReadUInt32());
+                if(Version.Major < GVariables.SERVersion.Major)
+                {
+                    throw new SEResourceVersionOldException($"File Version{Version.GetVersion()} is small than the engine used\"{GVariables.SERVersion}\"");
+                }
+                Time = new TIME(br.ReadUInt64());
+                DeveloperSTC = br.ReadUInt64();
+                Flag = (SERFLG)br.ReadUInt32();
+                BlockCount = br.ReadUInt32();
+                CRC32CODE = br.ReadUInt32();
+
+                Blocks = new SERBlock[BlockCount];
+                for (int i = 0; i < BlockCount; i++)
+                {
+                    Blocks[i] = new SERBlock();
+                    Blocks[i].Father = this;
+                    Blocks[i].StartIndex = (ulong)br.Position;
+                    if (br.ReadByte() != 'S' || br.ReadByte() != 'E' || br.ReadByte() != 'P' || br.ReadByte() != 'K')
+                    {
+                        //string vb = "";
+                        //vb.GetHashCode();
+                        throw new Exception($"第{i}区块头损坏！！");
+                    }
+                    Blocks[i].NAMESTC = br.ReadUInt64();
+                    Blocks[i].Time = new TIME(br.ReadUInt64());
+                    Blocks[i].Type = br.ReadUInt16();
+                    Blocks[i].Flag = br.ReadUInt16();
+                    Blocks[i].PasswordSTCSTC = br.ReadUInt64();
+                    Blocks[i].crc32 = br.ReadUInt32();
+                    Blocks[i].thisFile = new FILE(Blocks[i].NAMESTC, 0);
+                    Blocks[i].thisFile.Length = br.ReadUInt64();
+                    if (br.ReadByte() != 'D' || br.ReadByte() != 'A' || br.ReadByte() != 'T' || br.ReadByte() != 'A')
+                    {
+                        //string vb = "";
+                        //vb.GetHashCode();
+                        throw new Exception($"第{i}区块数据损坏！！");
+                    }
+                    MemoryStream msm = new MemoryStream();
+                    for (ulong ir = 0; ir < Blocks[i].thisFile.Length; ir++)
+                    {
+                        msm.WriteByte(br.ReadUInt8());
+                    }
+                    Blocks[i].Context = msm;
+                    //br.BaseStream.Seek((long)Blocks[i].thisFile.Length, SeekOrigin.Current);
+                }
+
+            }
+        }
+
+        public void Save()//
+        {
+
+            MainStream.Flush();
+            MainStream.Seek(0, SeekOrigin.Begin);
+            Stream fs = File.Open(FilePath, FileMode.Open);
+            byte[] bf = new byte[GVariables.DefaultBufferSize];
+            int p = 0;
+            p = MainStream.Read(bf, 0, bf.Length);
+            while (p > 0)
+            {
+                fs.Write(bf, 0, p);
+                p = MainStream.Read(bf, 0, bf.Length);
+            }
+            fs.Flush();
+            fs.Close();
+        }
+
+        public void Flush()//
+        {
+
+            MainStream.Flush();
+            MainStream.Seek(0, SeekOrigin.Begin);
+            byte[] b = new byte[36];
+            b[0] = (byte)'S';
+            b[1] = (byte)'E';
+            b[2] = (byte)'S';
+            b[3] = (byte)'F';
+            b[4] = Version.Major;
+            b[5] = Version.Minor;
+            b[6] = Version.Build;
+            b[7] = Version.Revision;
+            DataLayout dl = new DataLayout();
+            dl.UL = Time.GetTimeCode();
+            b[8] = dl.B0;
+            b[9] = dl.B1;
+            b[10] = dl.B2;
+            b[11] = dl.B3;
+            b[12] = dl.B4;
+            b[13] = dl.B5;
+            b[14] = dl.B6;
+            b[15] = dl.B7;
+            dl.UL = DeveloperSTC;
+            b[16] = dl.B0;
+            b[17] = dl.B1;
+            b[18] = dl.B2;
+            b[19] = dl.B3;
+            b[20] = dl.B4;
+            b[21] = dl.B5;
+            b[22] = dl.B6;
+            b[23] = dl.B7;
+            dl.UI0 = (uint)Flag;
+            b[24] = dl.B0;
+            b[25] = dl.B1;
+            b[26] = dl.B2;
+            b[27] = dl.B3;
+            dl.UI0 = BlockCount;
+            b[28] = dl.B0;
+            b[29] = dl.B1;
+            b[30] = dl.B2;
+            b[31] = dl.B3;
+            dl.UI0 = CRC32.GetCRC32(b, 0, 32);
+            b[32] = dl.B0;
+            b[33] = dl.B1;
+            b[34] = dl.B2;
+            b[35] = dl.B3;
+            MainStream.Write(b, 0, b.Length);
+            MainStream.Flush();//重写头
+            byte[] bff = new byte[GVariables.DefaultBufferSize];
+            int v = 0;
+            BinaryOperator bw = new BinaryOperator(MainStream);
+            DataLayout sdl = new DataLayout();
+            byte[] btab = new byte[40];
+            for (long i = 0; i < Blocks.LongLength; i++)
+            {
+                //MainStream.Write();
+                bw.Write('S');
+                bw.Write('E');
+                bw.Write('P');
+                bw.Write('K');
+                sdl.UL = 0;
+                btab[0] = 0;
+                bw.Write(Blocks[i].NAMESTC);
+                bw.Write(Blocks[i].Time.GetTimeCode());
+                bw.Write(Blocks[i].Type);
+                bw.Write(Blocks[i].Flag);
+                bw.Write(Blocks[i].PasswordSTCSTC);
+                bw.Write(Blocks[i].crc32);
+                Blocks[i].Context.Seek(0, SeekOrigin.Begin);
+                bw.Write(Blocks[i].Context.Length);
+                bw.Write('D');
+                bw.Write('A');
+                bw.Write('T');
+                bw.Write('A');
+                v = Blocks[i].Context.Read(bff);
+                while (v > 0)
+                {
+                    MainStream.Write(bff, 0, v);
+                    v = Blocks[i].Context.Read(bff);
+                }
+            }
+            MainStream.Flush();
+            //ThisFile.FileStream.Position = 0;
+        }
+
+        public SERBlock GetBlock(string name)
+        {
+            ulong stc = STCCode.GetSTC(name);
+            for (uint i = 0; i < BlockCount; i++)
+            {
+                if (Blocks[i].NAMESTC == stc)
+                {
+                    return Blocks[i];
+                }
+            }
+            throw new Exception($"Block\"{name}\" not found!!!");
+        }
+        public SERBlock GetBlock(ulong name_stc)
+        {
+            ulong stc = name_stc;
+            for (uint i = 0; i < BlockCount; i++)
+            {
+                if (Blocks[i].NAMESTC == stc)
+                {
+                    return Blocks[i];
+                }
+            }
+            throw new Exception($"Block\"{name_stc}\" not found!!!");
+        }
+        public SERBlock GetBlock(uint id)
+        {
+
+            if (id > BlockCount)
+            {
+                throw new Exception($"{id} is too large for this array!!({BlockCount})");
+            }
+
+            return Blocks[id];
+        }
+        public KeyValuePair<byte[], long> Read(uint tgb_id, int count, ulong passstc = 0)
+        {
+            return Read(GetBlock(tgb_id), count, passstc);
+        }
+        public KeyValuePair<byte[], long> Read(string tgb_name, int count, ulong passstc = 0)
+        {
+            return Read(GetBlock(tgb_name), count, passstc);
+        }
+        public KeyValuePair<byte[], long> Read(SERBlock tgb, int count, ulong passstc = 0)
+        {
+            if ((tgb.Flag & 1) == 1)//lock
+            {
+                if (passstc == 0)
+                {
+                    throw new Exception("密码为空");
+                }
+                //KeyValuePair < byte[] ,long> c = ThisFile.Read(tgb.thisFile, count);
+                byte[] k = new byte[count];
+                tgb.Context.Seek(tgb.thisFile.ThisPosition, SeekOrigin.Begin);
+                int rd = tgb.Context.Read(k);
+
+                DataLayout dl = new DataLayout();
+                dl.UL = passstc;
+                long tps = tgb.thisFile.ThisPosition;
+                long hr = rd;
+                for (long i = 0; i < k.LongLength; i++)
+                {
+                    if (tps % 2 == 0)
+                    {
+                        k[i] = (byte)(k[i] - dl.B0 + dl.B2);
+                    }
+                    else if (tps % 3 == 0)
+                    {
+                        k[i] = (byte)(k[i] - dl.B1 + dl.B3);
+                    }
+                    else if (tps % 5 == 0)
+                    {
+                        k[i] = (byte)(k[i] - dl.B4 + dl.B6);
+                    }
+                    else if (tps % 7 == 0)
+                    {
+                        k[i] = (byte)(k[i] - dl.B5 + dl.B7);
+                    }
+                    tps++;
+                }
+
+                return new KeyValuePair<byte[], long>(k, hr);
+            }
+            else
+            {
+                byte[] k = new byte[count];
+                tgb.Context.Seek(tgb.thisFile.ThisPosition, SeekOrigin.Begin);
+                int rd = tgb.Context.Read(k);
+                return new KeyValuePair<byte[], long>(k, rd);
+            }
+
+        }
+        public KeyValuePair<byte[], long> ReadAll(SERBlock tgb, ulong passstc = 0)
+        {
+            if (tgb.thisFile.Length > 2147483647)//intmax
+            {
+                if ((tgb.Flag & 1) == 1)//lock
+                {
+                    if (passstc == 0)
+                    {
+                        throw new Exception("密码为空");
+                    }
+                    //KeyValuePair < byte[] ,long> c = ThisFile.Read(tgb.thisFile, count);
+                    byte[] k = new byte[tgb.thisFile.Length];
+                    byte[] buff = new byte[102400];
+                    tgb.Context.Seek(tgb.thisFile.ThisPosition, SeekOrigin.Begin);
+                    int rd = tgb.Context.Read(buff);
+                    ulong rdu = 0;
+                    while (rdu < (tgb.thisFile.Length - 102400))
+                    {
+                        Parallel.For(0, rd, (i) =>
+                        {
+                            k[rdu + 1] = buff[i];
+                        });
+                        rdu += (ulong)rd;
+                        rd = tgb.Context.Read(buff);
+                    }
+                    int ppc = (int)(tgb.thisFile.Length - rdu);
+                    Parallel.For(0, ppc, (i) =>
+                    {
+                        k[rdu + 1] = buff[i];
+                    });
+                    DataLayout dl = new DataLayout();
+                    dl.UL = passstc;
+                    long tps = tgb.thisFile.ThisPosition;
+                    long hr = rd;
+                    for (long i = 0; i < k.LongLength; i++)
+                    {
+                        if (tps % 2 == 0)
+                        {
+                            k[i] = (byte)(k[i] - dl.B0 + dl.B2);
+                        }
+                        else if (tps % 3 == 0)
+                        {
+                            k[i] = (byte)(k[i] - dl.B1 + dl.B3);
+                        }
+                        else if (tps % 5 == 0)
+                        {
+                            k[i] = (byte)(k[i] - dl.B4 + dl.B6);
+                        }
+                        else if (tps % 7 == 0)
+                        {
+                            k[i] = (byte)(k[i] - dl.B5 + dl.B7);
+                        }
+                        tps++;
+                    }
+
+                    return new KeyValuePair<byte[], long>(k, hr);
+                }
+                else
+                {
+                    byte[] k = new byte[tgb.thisFile.Length];
+                    byte[] buff = new byte[102400];
+                    tgb.Context.Seek(tgb.thisFile.ThisPosition, SeekOrigin.Begin);
+                    int rd = tgb.Context.Read(buff);
+                    ulong rdu = 0;
+                    while (rdu < (tgb.thisFile.Length - 102400))
+                    {
+                        Parallel.For(0, rd, (i) =>
+                        {
+                            k[rdu + 1] = buff[i];
+                        });
+                        rdu += (ulong)rd;
+                        rd = tgb.Context.Read(buff);
+                    }
+                    int ppc = (int)(tgb.thisFile.Length - rdu);
+                    return new KeyValuePair<byte[], long>(k, rd);
+                }
+            }
+            else
+            {
+                return Read(tgb, (int)tgb.thisFile.Length, passstc);
+            }
+        }
+        public void Write(uint tgb_id, byte[] b, ulong passstc = 0)
+        {
+            Write(GetBlock(tgb_id), b, passstc);
+        }
+        public void Write(string tgb_name, byte[] b, ulong passstc = 0)
+        {
+            Write(GetBlock(tgb_name), b, passstc);
+        }
+        public void Write(SERBlock tgb, byte[] b, ulong passstc = 0)
+        {
+            if ((tgb.Flag & 1) == 1)//lock
+            {
+                if (passstc == 0)
+                {
+                    throw new Exception("密码为空");
+                }
+                //KeyValuePair<byte[], long> c = ThisFile.Read(tgb.thisFile, count);
+                byte[] k = b;
+                DataLayout dl = new DataLayout();
+                dl.UL = passstc;
+                long tps = tgb.thisFile.ThisPosition;
+                //long hr = c.Value;
+                for (long i = 0; i < k.LongLength; i++)
+                {
+                    if (tps % 2 == 0)
+                    {
+                        k[i] = (byte)(k[i] + dl.B0 - dl.B2);
+                    }
+                    else if (tps % 3 == 0)
+                    {
+                        k[i] = (byte)(k[i] + dl.B1 - dl.B3);
+                    }
+                    else if (tps % 5 == 0)
+                    {
+                        k[i] = (byte)(k[i] + dl.B4 - dl.B6);
+                    }
+                    else if (tps % 7 == 0)
+                    {
+                        k[i] = (byte)(k[i] + dl.B5 - dl.B7);
+                    }
+                    tps++;
+                }
+                //ThisFile.Write(tgb.thisFile, k);
+                tgb.Context.Seek(tgb.thisFile.ThisPosition, SeekOrigin.Begin);
+                tgb.Context.Write(k);
+                //return new KeyValuePair<byte[], long>(k, hr);
+            }
+            else
+            {
+                tgb.Context.Seek(tgb.thisFile.ThisPosition, SeekOrigin.Begin);
+                tgb.Context.Write(b);
+            }
+        }
+
+
+    }
+}

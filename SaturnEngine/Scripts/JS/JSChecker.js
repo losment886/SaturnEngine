@@ -1,0 +1,4 @@
+﻿function Main() {
+
+    return true;
+}

@@ -1,0 +1,52 @@
+﻿using Microsoft.ClearScript.V8;
+using SaturnEngine.Security;
+
+namespace SaturnEngine.Global
+{
+    public static class GlobalScripts
+    {
+        public static Dictionary<ulong, V8Script> scp = new Dictionary<ulong, V8Script>();
+        public static void Compile(string fp, string? name = null)
+        {
+            if (name == null)
+            {
+                string n = Path.GetFileNameWithoutExtension(fp);
+                ulong sc = STCCode.GetSTC(n);
+                scp.Add(sc, GVariables.ScriptEngineGlobal.CompileDocument(fp));
+
+            }
+            else
+            {
+                ulong sc = STCCode.GetSTC(name);
+                scp.Add(sc, GVariables.ScriptEngineGlobal.CompileDocument(fp));
+            }
+        }
+        public static void Compile(string[] fp, string?[] name = null)
+        {
+            if (name == null)
+            {
+                for (int i = 0; i < fp.Length; i++)
+                {
+                    Compile(fp[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < fp.Length; i++)
+                {
+                    Compile(fp[i], name[i]);
+                }
+            }
+        }
+        public static dynamic RunMain(ulong stc)
+        {
+            GVariables.ScriptEngineGlobal.Execute(scp[stc]);
+            return GVariables.ScriptEngineGlobal.Script.Main();
+        }
+        public static dynamic RunMain(string nm)
+        {
+            GVariables.ScriptEngineGlobal.Execute(scp[STCCode.GetSTC(nm)]);
+            return GVariables.ScriptEngineGlobal.Script.Main();
+        }
+    }
+}

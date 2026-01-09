@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>d7121b68-5c68-41a0-8215-f44b301871ba</UserSecretsId>
+    <Platforms>AnyCPU;x64;ARM64</Platforms>
+	<PublishAot>False</PublishAot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Eto.Forms" Version="2.9.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SaturnEngine\SaturnEngine.csproj" />
+    <ProjectReference Include="..\SEDumper\SEDumper.csproj" />
+  </ItemGroup>
+
+</Project>

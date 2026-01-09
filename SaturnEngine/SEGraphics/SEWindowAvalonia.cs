@@ -1,0 +1,111 @@
+﻿using SaturnEngine.Asset;
+using SaturnEngine.SEMath;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SaturnEngine.SEGraphics
+{
+    public class SEWindowAvalonia : SEWindow
+    {
+        public nint hwnd;
+        public override void Close()
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void CreateWindow()
+        {
+            //throw new NotImplementedException();
+            //因为步骤不可变且已有现成的窗口，所以这里不需要做任何事
+        }
+
+        public override nint GetWindowHandle()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Initialize()
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void LockCursor(bool lockCursor)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void RunWindow()
+        {
+            //throw new NotImplementedException();
+            //完成与控件的交互，在运行此函数前应确保控件已创建，且传入hwnd
+        }
+
+        public override void SetCursorEndlessMove(bool endlessMove)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetCursorFromImage(SEImageFile fp, int x = 0, int y = 0)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetFullScreen(bool fullscreen)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetICONFromImage(SEImageFile fp)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetMonitorIndex(int index)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetPosition(Vector2D pos)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetRenderRate(double rt)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetResizable(bool resizable)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetSize(Vector2D size)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void SetTitle(string title)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void ShowCursor(bool showCursor)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void UseLogicCursorInput(bool useLogicCursor)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public override void UseVirtualCursorInput(bool us)
+        {
+            //throw new NotImplementedException();
+        }
+    }
+}
