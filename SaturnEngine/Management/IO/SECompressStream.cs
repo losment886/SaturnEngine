@@ -76,7 +76,7 @@ public class SECompressStream : Stream
                 if ((stclist.TryGetValue(sc, out a)))
                 {
                     //match
-                    //string vl = Encoding.UTF8.GetString(d, offset + curindex, WindowSize);
+                    
                     string trig = Encoding.UTF8.GetString(d, a, WindowSize);
                     Console.WriteLine(vl + " --- " +trig);
                     LzPkg pkg = new LzPkg();
