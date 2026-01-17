@@ -65,72 +65,40 @@ public class SECompressStream : Stream
         List<LzPkg> list = new List<LzPkg>();
         stclist = new Dictionary<ulong,int>();
         int cci = 0;
-        while (curindex < siz)
+        ulong stc = 0;
+        while (true)
         {
-            if(curindex + WindowSize * 2 - 1 < siz)
+            if (curindex + WindowSize > siz)
             {
-               
-                string vl = Encoding.UTF8.GetString(d, offset + curindex, WindowSize);
-                ulong sc = STCCode.GetSTC(vl);
-                int a;
-                if ((stclist.TryGetValue(sc, out a)))
-                {
-                    //match
-                    
-                    string trig = Encoding.UTF8.GetString(d, a, WindowSize);
-                    Console.WriteLine(vl + " --- " +trig);
-                    LzPkg pkg = new LzPkg();
-                    pkg.index = cci;
-                    pkg.count = curindex - cci;
-                    if (a + WindowSize > curindex)
-                    {
-                        pkg.offset = curindex - a - WindowSize;
-                        pkg.repeat = curindex - a;
-                    }
-                    else if (a > cci)
-                    {
-                        pkg.offset = a - cci;
-                        pkg.repeat = WindowSize;
-
-                    }
-                    else
-                    {
-                        pkg.offset = curindex - a;
-                        pkg.repeat = WindowSize;
-                    }
-                    curindex += WindowSize;
-                    cci = curindex;
-                    list.Add(pkg);
-                }
-                else
-                {
-                    
-                    Console.WriteLine(vl);
-                    stclist.Add(sc, curindex);
-                    curindex++;
-                }
+                LzPkg lp = new LzPkg();
+                lp.repeat = 0;
+                lp.index = cci;
+                lp.offset = 0;
+                lp.count = siz - cci;
+                list.Add(lp);
+                break;
+            }
+            stc = STCCode.GetSTC(d, curindex + offset, WindowSize);
+            if (stclist.TryGetValue(stc, out int repindex))
+            {
+                LzPkg lp = new LzPkg();
+                lp.repeat = WindowSize;
+                lp.index = cci;
+                lp.offset = curindex - repindex;
+                lp.count = curindex - cci;
+                list.Add(lp);
+                cci = curindex;
+                curindex += WindowSize;
             }
             else
             {
-                LzPkg pkg = new LzPkg();
-                pkg.index = cci;
-                pkg.count = siz - cci;
-                pkg.offset = 0;
-                pkg.repeat = 0;
-                list.Add(pkg);
-                break;
+                curindex++;
             }
+
         }
         //List<byte> res = new List<byte>();
         BinaryOperator bw = new BinaryOperator(new SEMemoryStream());
-        foreach (var pkg in list)
-        {
-            bw.Write((byte)pkg.count);
-            //bw.Write(pkg.index);
-            bw.Write(pkg.offset);
-            bw.Write((byte)pkg.repeat);
-            bw.Write(d, pkg.index, pkg.count);
-        }
+        
         LRStreamSlim l = new LRStreamSlim(bw,0,bw.Length);
         return l.ReadAllInBytes();
     }

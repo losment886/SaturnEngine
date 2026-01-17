@@ -116,8 +116,18 @@ namespace Windows_Test_Project
                     break;
                 }
             }
-
-
+            
+            SELogger.Log("测试STCCode");
+            byte[] val =
+            [
+                1, 2, 33, 2, 99, 9, 3, 45, 77, 59, 4, 95, 113, 106, 2, 66, 98, 222, 210, 192, 0, 33, 7, 254, 253, 44,
+                78, 9, 13 ,200
+            ];
+            for (int i = 1; i <= 5; i++)
+            {
+                SELogger.Log(STCCode.GetSTC(val, i - 1, (uint)i * 6).ToString());
+            }
+            SELogger.Input();
             SELogger.Log("测试SELz4");
 
             string vl = "helloworldhellohhhhhwdsadalkjasldjajjjjjjjjjdasdkskdsdskjksdalskdjalskdjalskjdajjdkjkjsdkjskdjskjdkjdkjdksdsjdjkjsdskjdsdksjdskdsdjjjdjdjdjdjdjdjdjdjdj";
