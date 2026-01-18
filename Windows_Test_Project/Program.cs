@@ -1,4 +1,6 @@
-﻿using SaturnEngine.Asset;
+﻿//#define SaturnEngine_Release
+
+using SaturnEngine.Asset;
 using SaturnEngine.Base;
 using SaturnEngine.Global;
 using SaturnEngine.Management;

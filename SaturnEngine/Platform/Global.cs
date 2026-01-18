@@ -160,6 +160,7 @@ namespace SaturnEngine.Platform
 
             Dispatcher.Init();
             SEMonitor.Init();
+#if !SaturnEngine_Release//release下脚本无效，直接编译进程序
             GVariables.ScriptEngineGlobal = new ScriptEngine.SEScriptEngine();
             GVariables.ScriptEngineGlobal.Init(ScriptEngine.SEScriptEngine.EnableScriptType.All);
             //此处将加载ProgramInfo.js
@@ -230,6 +231,7 @@ namespace SaturnEngine.Platform
 
             //GVariables.ScriptEngineGlobal.RunMain("ProgramInfo.js");
             GVariables.ScriptEngineGlobal.RunMain("EngineInit.cs");//自定义初始化
+#endif
             //Something is error on MacOS
             //GVariables.AudioManager = new SEAudio.SEAudioManager();
             //GVariables.AudioManager.Initialize();
