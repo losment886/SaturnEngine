@@ -471,9 +471,13 @@ namespace SaturnEngine.SEGraphics
                 old = cur;
             }
         }
-        public override void RunWindow()
+        void CreateResource()
         {
-
+            if (Renderer != null)
+            {
+                Renderer.DestroyDevice();
+                Renderer = null;
+            }
             if (GVariables.OS == OS.Windows)
             {
                 switch (GVariables.GraphicsAPI)
@@ -536,6 +540,11 @@ namespace SaturnEngine.SEGraphics
                         break;
                 }
             }
+        }
+        public override void RunWindow()
+        {
+
+            CreateResource();
             //SELogger.Log(GVariables.SystemTempDir);
             //SELogger.Log("检查STEAM接入情况");
 

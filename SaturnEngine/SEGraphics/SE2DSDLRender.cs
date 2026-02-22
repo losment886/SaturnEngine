@@ -4,19 +4,21 @@ using SaturnEngine.Global;
 using SaturnEngine.Management;
 using SaturnEngine.Security;
 using SaturnEngine.SEMath;
+//using Hexa.NET.SDL3;
 using Silk.NET.SDL;
 using Silk.NET.Input;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Runtime.InteropServices;
+//using Hexa.NET.SDL3;
 using SixLabors.ImageSharp.Processing;
 
 namespace SaturnEngine.SEGraphics
 {
     public unsafe class SE2DSDLRender : Render
     {
-        public Renderer* RendererPtr;
+        public Renderer * RendererPtr;
         
-        public Window * SDLWindowPtr;
+        public Window* SDLWindowPtr;
         public Vector3D BackgroundColor = new Vector3D(0, 0, 0);
         //public List<nint> uitextures = new List<nint>();
         public Dictionary<ulong, nint> uitextures = new Dictionary<ulong, nint>();
@@ -38,21 +40,30 @@ namespace SaturnEngine.SEGraphics
             SELogger.Log("Creating SDL2D Renderer");
             var w = GVariables.MainWindow.GetWindowHandle();
             SELogger.Log("Got window handle");
-            var windowhl = (void*)(Silk.NET.GLFW.WindowHandle*)(w);
-            //var pp = *(Silk.NET.GLFW.WindowHandle*)(w);
-            //var g = Silk.NET.GLFW.Glfw.GetApi();
+            if (GVariables.CurrentWindowHostType == WindowHostType.SDL)
+            {
+                Hexa.NET.SDL3.SDLWindowPtr sw = new Hexa.NET.SDL3.SDLWindowPtr((Hexa.NET.SDL3.SDLWindow*)w);
+                SDLWindowPtr = (Window*)sw.Handle;
+            }
+            else
+            {
+                var windowhl = (void*)(w);
+                //var pp = *(Silk.NET.GLFW.WindowHandle*)(w);
+                //var g = Silk.NET.GLFW.Glfw.GetApi();
             
-            //g.MakeContextCurrent(pp);
-            //Silk.NET.GLFW.Glfw.GetApi().GetWin32Window(windowhl, out nint hWnd);
-            //Sdl.Windows l;
-            //SDL.CreateWindowFrom()
-            //Silk.NET.Windowing.IWindow nativeWindow = (Silk.NET.Windowing.IWindow)(object)pp;
-            //Silk.NET.Windowing.Window..Native.Cocoa.Value;
-            SDLWindowPtr = SDL.CreateWindowFrom(windowhl);
+                //g.MakeContextCurrent(pp);
+                //Silk.NET.GLFW.Glfw.GetApi().GetWin32Window(windowhl, out nint hWnd);
+                //Sdl.Windows l;
+                //SDL.CreateWindowFrom()
+                //Silk.NET.Windowing.IWindow nativeWindow = (Silk.NET.Windowing.IWindow)(object)pp;
+                //Silk.NET.Windowing.Window..Native.Cocoa.Value;
+                //SDLWindowPtr = new SDLWindowPtr((SDLWindow*)w);
+            }
             SELogger.Log("Created SDL Window from handle");
             if ((nint)SDLWindowPtr == IntPtr.Zero)
                 return false;
             RendererPtr = SDL.CreateRenderer(SDLWindowPtr, index, (uint)RendererFlags.Accelerated);
+            SELogger.Log("Created SDL Render from handle");
             SDL.RenderSetVSync(RendererPtr, 0);
             if ((nint)RendererPtr != IntPtr.Zero)
                 return true;
@@ -96,18 +107,21 @@ namespace SaturnEngine.SEGraphics
         }
         public override void Initialize()
         {
-            SDL.Init(Sdl.InitVideo);
+            //SDL.Init(Sdl.InitVideo);
             //SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG);
+
+            if (GVariables.CurrentWindowHostType != WindowHostType.SDL)
+            {
+                SDL.EventState((uint)EventType.Mousemotion, Sdl.Disable);
+                SDL.EventState((uint)EventType.Mousebuttondown, Sdl.Disable);
+                SDL.EventState((uint)EventType.Mousebuttonup, Sdl.Disable);
+                SDL.EventState((uint)EventType.Mousewheel, Sdl.Disable);
+                SDL.EventState((uint)EventType.Keydown, Sdl.Disable);
+                SDL.EventState((uint)EventType.Keyup, Sdl.Disable);
+                SDL.EventState((uint)EventType.Keymapchanged, Sdl.Disable);
             
-            SDL.EventState((uint)EventType.Mousemotion, Sdl.Disable);
-            SDL.EventState((uint)EventType.Mousebuttondown, Sdl.Disable);
-            SDL.EventState((uint)EventType.Mousebuttonup, Sdl.Disable);
-            SDL.EventState((uint)EventType.Mousewheel, Sdl.Disable);
-            SDL.EventState((uint)EventType.Keydown, Sdl.Disable);
-            SDL.EventState((uint)EventType.Keyup, Sdl.Disable);
-            SDL.EventState((uint)EventType.Keymapchanged, Sdl.Disable);
-            
-            SDL.ShowCursor(Sdl.Disable);
+                SDL.ShowCursor(Sdl.Disable);
+            }
         }
         bool framepping = false;
         bool rendering = false;

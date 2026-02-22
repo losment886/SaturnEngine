@@ -803,8 +803,18 @@ namespace SaturnEngine.SEInput
 
     }
 
+    public enum Provider : int
+    {
+        Unknown = -1,
+        None = 0,
+        Hook = 1,
+        Glfw = 2,
+        Sdl = 3
+    }
+    
     public unsafe class BasicInput
     {
+        public static Provider InputType { get; set; }
         public static Keys FromGLFWKeyGetKeys(Silk.NET.GLFW.Keys k)
         {
             switch (k)
@@ -1165,8 +1175,8 @@ namespace SaturnEngine.SEInput
         {
             return bacpool[(int)k];
         }
-        public static bool UseWinHook = true;
-        public static bool UseXInput = true;
+        //public static bool UseWinHook = true;
+        //public static bool UseXInput = true;
         /// <summary>
         /// 要屏蔽的单个按键的集群，在失焦时屏蔽按键不可用
         /// </summary>

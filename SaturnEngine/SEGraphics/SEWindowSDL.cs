@@ -3,102 +3,95 @@ using SaturnEngine.Base;
 using SaturnEngine.Management.Event;
 using SaturnEngine.Performance;
 using SaturnEngine.SEMath;
-using Silk.NET.SDL;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hexa.NET;
+using Hexa.NET.SDL3;
+using SaturnEngine.Global;
+using SaturnEngine.Management;
+using SaturnEngine.SEInput;
 
 namespace SaturnEngine.SEGraphics
 {
-    public class SEWindowSDL : SEWindow
+    public unsafe class SEWindowSDL : SEWindow
     {
+       
         string _title;
-        nint _window;
+        SDLWindowPtr _window;
+        //SDLRendererPtr? _renderer;
         
 
-        double _EventRate = 1000;
-        double _RenderRate = 300;
-        double _AudioRate = 1000;
-        double _MainThreadRate = 1000;
 
-        public SEThread MainThread { get; private set; }
-        public SEThread UpdateThread { get; private set; }
-        public SEThread RenderThread { get; private set; }
-        public SEThread AudioThread { get; private set; }
-        public SEThread PhysicsThread { get; private set; }
-        public SEThread NetworkThread { get; private set; }
-        public SEThread VideoThread { get; private set; }
-        public SEThread InputThread { get; private set; }//if hook?
-
-
-        public Vector2D Size { get; private set; }
-        public Vector2D Position { get; private set; }
-        public string Title { get => _title; private set => SetTitle(value); }
-        public bool Resizable { get; private set; } = true;
-        public bool FullScreen { get; private set; } = false;
-        public double EventRate { get { return _EventRate; } private set { _EventRate = value; UpdateThread?.SetFPS((int)_EventRate); } }
-        public double RenderRate { get { return _RenderRate; } private set { _RenderRate = value; RenderThread?.SetFPS((int)_RenderRate); } }
-        public double AudioRate { get { return _AudioRate; } private set { _AudioRate = value; AudioThread?.SetFPS((int)_AudioRate); } }
-        public double MainThreadRate { get { return _MainThreadRate; } private set { _MainThreadRate = value; MainThread?.SetFPS((int)_MainThreadRate); } }
-        public double EventRateBackground { get; private set; } = 60;
-        public double AudioRateBackground { get; private set; } = 60;
-        public double RenderRateBackground { get; private set; } = 60;
-        public double MainThreadRateBackground { get; private set; } = 500;
-        public bool TearingSupport { get; private set; } = false;
-        public bool UseTearing { get; private set; } = false;
-        public bool UseHDR { get; private set; } = false;
-        public bool HDRSupport { get; private set; } = false;
-        public Render Renderer { get; private set; } = null!; //渲染器
-        public DelegateQueue Delegates { get; private set; } = new DelegateQueue("Main Thread DIL");//主队列事件执行
-        public DelegateQueue RenderDel { get; private set; } = new DelegateQueue("Render Thread DIL");//主队列事件执行
-        public DelegateQueue AudioDel { get; private set; } = new DelegateQueue("Audio Thread DIL");//主队列事件执行
-        public IUpdateLoop UpdateLoop { get; set; } = null;
         public void SetTitle_(string title)
         {
             //this._title = title; 
             this._title = title;
             //SDL.SDL_SetWindowTitle(_window, _title);
+            SDL.SetWindowTitle(_window, _title);
         }
 
         public override void CreateWindow()
         {
             //SDL.SDL_Init(SDL.SDL_INIT_EVERYTHING);
-            //_window =SDL.SDL_CreateWindow(Title, (int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y, SDL.SDL_WindowFlags.SDL_WINDOW_VULKAN | SDL.SDL_WindowFlags.SDL_WINDOW_SHOWN | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE | SDL.SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI);
+            _window = SDL.CreateWindow(Title, (int)Size.X, (int)Size.Y, (ulong)SDLWindowFlags.Resizable);
+            SDL.SetWindowPosition(_window, (int)Position.X, (int)Position.Y);
+            //int x, y;
+            //SDL.GetWindowPosition(_window, &x, &y);
+            //Position = new Vector2D(x, y);
         }
 
         public override void SetMonitorIndex(int index)
         {
-            throw new NotImplementedException();
+            
         }
 
         public override void SetRenderRate(double rt)
         {
-            throw new NotImplementedException();
+           RenderRate = rt;
         }
 
         public override void SetPosition(Vector2D pos)
         {
-            throw new NotImplementedException();
+            Delegates.Add(()=>{ SetPosition_(pos); });
+        }
+        
+        public void SetPosition_(Vector2D pos)
+        {
+            SDL.SetWindowPosition(_window, (int)Position.X, (int)Position.Y);
         }
 
         public override void SetSize(Vector2D size)
         {
-            throw new NotImplementedException();
+            //SDL.SetWindowSize();
+            Delegates.Add(()=>{ SetSize_(size); });
+        }
+        public void SetSize_(Vector2D size)
+        {
+            SDL.SetWindowSize(_window, (int)size.X, (int)size.Y);
         }
 
         public override void UseVirtualCursorInput(bool us)
         {
-            throw new NotImplementedException();
+            
         }
 
         public override void SetResizable(bool resizable)
         {
-            throw new NotImplementedException();
+            Delegates.Add(()=>{ SetResizable_(resizable); });
+        }
+        public void SetResizable_(bool resizable)
+        {
+            SDL.SetWindowResizable(_window, resizable);
         }
 
         public override void SetFullScreen(bool fullscreen)
         {
-            throw new NotImplementedException();
+            Delegates.Add(()=>{ SetFullScreen_(fullscreen); });
+        }
+        public void SetFullScreen_(bool fullscreen)
+        {
+            SDL.SetWindowFullscreen(_window, fullscreen);
         }
 
         public override void SetTitle(string title)
@@ -109,52 +102,370 @@ namespace SaturnEngine.SEGraphics
 
         public override void SetICONFromImage(SEImageFile fp)
         {
-            throw new NotImplementedException();
+            
         }
 
         public override void SetCursorFromImage(SEImageFile fp, int x = 0, int y = 0)
         {
-            throw new NotImplementedException();
+            
         }
 
         public override void LockCursor(bool lockCursor)
         {
-            throw new NotImplementedException();
+            
         }
 
         public override void SetCursorEndlessMove(bool endlessMove)
         {
-            throw new NotImplementedException();
+           
         }
 
         public override void ShowCursor(bool showCursor)
         {
-            throw new NotImplementedException();
+            
+            Delegates.Add(()=>{ ShowCursor_(showCursor); });
+        }
+        public void ShowCursor_(bool showCursor)
+        {
+            if(!showCursor)
+                SDL.HideCursor();
+            else
+            {
+
+                SDL.ShowCursor();
+            }
         }
 
+        
         public override void UseLogicCursorInput(bool useLogicCursor)
         {
-            throw new NotImplementedException();
+            
         }
 
+        public SDLInitFlags InitCode = SDLInitFlags.Audio | SDLInitFlags.Events | SDLInitFlags.Gamecontroller |
+                                       SDLInitFlags.Gamepad | SDLInitFlags.Joystick | SDLInitFlags.Timer | SDLInitFlags.Video;
+        bool inited = false;
         public override void Initialize()
         {
-            throw new NotImplementedException();
+            if (SDL.Init((uint)InitCode))
+            {
+                inited = true;
+            }
+            else
+            {
+                SELogger.Error("SDL init failed");
+            }
         }
 
         public override void Close()
         {
-            throw new NotImplementedException();
+            SDL.DestroyWindow(_window);
         }
+        double er = 0;
+        double rr = 0;
+        double mtr = 0;
+        double ar = 0;
+        private void SetBackRate()
+        {
+            er = EventRate;
+            rr = RenderRate;
+            mtr = MainThreadRate;
+            ar = AudioRate;
+            EventRate = EventRateBackground;
+            AudioRate = AudioRateBackground;
+            RenderRate = RenderRateBackground;
+            MainThreadRate = MainThreadRateBackground;
 
+        }
+        private void SetForceRate()
+        {
+            EventRate = er;
+            RenderRate = rr;
+            MainThreadRate = mtr;
+            AudioRate = ar;
+        }
+        private void RenderThreadFunc()
+        {
+            
+            double cac = 0;
+            double cur = 0;
+            double dly = 1 / RenderRate;
+            double old = 0;
+            long u = 0;
+            double tts = 0;
+            double ups = 0;
+            //var func = Renderer.RenderFrame;
+
+            while (GVariables.EngineRunning)
+            {
+                u++;
+                cur = GetCurrentTime();
+                cac = cur - old;
+                if (!Delegates.IsInvoking)
+                {
+                    RenderDel.ProcessEvent();
+                    //do
+                    RenderDel.InvokeAll();
+                    dly = 1 / RenderRate;
+                    Renderer.PrepareFrame(cac);
+                    Delegates.Add(()=>{Renderer.RenderFrame(cac);});//主要画面更新在主线程运行，准备工作在副线程运行
+
+                    if (cur - tts >= 1)
+                    {
+                        ups = u / (cur - tts);
+                        Console.WriteLine("Render Update Rate:" + ups);
+                        u = 0;
+                        tts = cur;
+                    }
+                }
+                RenderThread.WaitForFPS();
+                old = cur;
+            }
+        }
+        private void AudioThreadFunc()
+        {
+            double cac = 0;
+            double cur = 0;
+            double dly = 1 / RenderRate;
+            double old = 0;
+            long u = 0;
+            double tts = 0;
+            double ups = 0;
+            var func = Renderer.RenderFrame;
+            while (GVariables.EngineRunning)
+            {
+                u++;
+                cur = GetCurrentTime();
+                cac = cur - old;
+                AudioDel.ProcessEvent();
+                //do
+
+                dly = 1 / AudioRate;
+
+                AudioDel.InvokeAll();
+
+                if (cur - tts >= 1)
+                {
+                    ups = u / (cur - tts);
+                    Console.WriteLine("Audio Update Rate:" + ups);
+                    u = 0;
+                    tts = cur;
+                }
+                AudioThread.WaitForFPS();
+                old = cur;
+            }
+        }
+        private void WorkThreadFunc()
+        {
+            double cac = 0;
+            double cur = 0;
+            double dly = 1 / EventRate;
+            double old = 0;
+            long u = 0;
+            double tts = 0;
+            double ups = 0;
+            while (GVariables.EngineRunning)
+            {
+                u++;
+                cur = GetCurrentTime();
+                cac = cur - old;
+                if (GVariables.ThisGame.UIScene != null)
+                {
+                    GVariables.ThisGame.UIScene.Update((float)cac);
+                }
+                UpdateLoop.Update((float)cac);
+                dly = 1 / EventRate;
+
+
+                if (cur - tts >= 1)
+                {
+                    ups = u / (cur - tts);
+                    Console.WriteLine("Event Update Rate:" + ups);
+                    u = 0;
+                    tts = cur;
+                }
+                UpdateThread.WaitForFPS();
+                old = cur;
+            }
+        }
         public override void RunWindow()
         {
-            throw new NotImplementedException();
+            CreateResource();
+            var dl = Renderer.GetDeviceNames();
+            int id = 0;
+            int co = 0;
+            if (dl.Length > 0)
+            {
+                Console.WriteLine("渲染器设备列表:");
+                foreach (var item in dl)
+                {
+                    Console.WriteLine(item);
+                    if (GVariables.GraphicsAPI == GraphicsAPI.SDL2D && item.ToLower().IndexOf("d12") > 1)
+                    {
+                        id = co;
+                    }
+                    co++;
+                }
+            }
+            else
+            {
+                Console.WriteLine("渲染器没有可用的设备");
+            }
+
+            if (!Renderer.CreateDevice(id))
+            {
+                //throw new Exception("Failed to create rendering device!");
+            }
+            
+            BasicInput.WSize = new POINT((int)Size.X, (int)Size.Y);
+            BasicInput.WPosi = new POINT((int)Position.X, (int)Position.Y);
+            //BasicInput.ThisWindow = ThisWindow;
+            
+            Renderer.SetScene(GVariables.ThisGame.CurrentSceneIndex);
+            
+            
+            MainThread = Dispatcher.CreateThreadFromExistedThread();
+            UpdateThread = Dispatcher.CreateThreadORG(WorkThreadFunc, ThreadPriority.AboveNormal);
+            RenderThread = Dispatcher.CreateThreadORG(RenderThreadFunc, ThreadPriority.Normal);
+            AudioThread = Dispatcher.CreateThreadORG(AudioThreadFunc, ThreadPriority.BelowNormal);
+            
+            double mx = 0, my = 0;
+            double currenttime = 0;
+            double lasttime = 0;
+            double ppp = 0;
+            double fps = 0;
+            int w, h, px, py;
+            ulong p = 0;
+            
+            er = EventRate;
+            rr = RenderRate;
+            mtr = MainThreadRate;
+            ar = AudioRate;
+
+            SetForceRate();
+
+            bool hassetbool = false;
+
+            UpdateThread.Start();
+            RenderThread.Start();
+            AudioThread.Start();
+
+            if (GVariables.ThisGame.UIScene != null)
+            {
+                Renderer.SetUIScene(true);
+            }
+            bool setrat = false;
+
+            double omx = 0, omy = 0;
+            double dfr = MainThreadRate;
+            //BasicInput.KeysToPrevent.Add(SEInput.Keys.LWin
+            SDLEvent e = new SDLEvent();
+            while (GVariables.EngineRunning)
+            {
+                currenttime = GetCurrentTime();
+                while (SDL.PollEvent(ref e))
+                {
+                    //empty
+                }
+
+                p++;
+                Delegates.ProcessEvent();
+                Delegates.InvokeAll();
+                //
+                BasicInput.AfterUpdate();
+
+
+                if ((currenttime - ppp) > 0.2)
+                {
+                    fps = p / (currenttime - ppp);
+                    //g.SetWindowTitle(ThisWindow, $"FPS:{fps} ||SEObjects Count:{GVariables.SEObjects.Count}|| Cursor Position:{BasicInput.CursorLogicPosition}");
+                    SetTitle_($"FPS:{fps} ||SEObjects Count:{GVariables.SEObjects.Count}|| Cursor Position:{BasicInput.CursorLogicPosition}");
+                    p = 0;
+                    
+                    ppp = GetCurrentTime();
+                }
+
+
+
+                MainThread.WaitForFPS();
+            }
         }
+        
 
         public override nint GetWindowHandle()
         {
-            throw new NotImplementedException();
+            return new nint(_window.Handle);
+        }
+
+        void CreateResource()
+        {
+            if (Renderer != null)
+            {
+                Renderer.DestroyDevice();
+                Renderer = null;
+            }
+            if (GVariables.OS == OS.Windows)
+            {
+                switch (GVariables.GraphicsAPI)
+                {
+                    case Global.GraphicsAPI.DirectX:
+
+                        Renderer = new SEDirectX12Render();
+                        Renderer.Initialize();
+                        break;
+                    case Global.GraphicsAPI.Vulkan:
+
+                        //通用VK
+                        Renderer = new SEVulkanRender();
+                        Renderer.Initialize();
+                        break;
+                    case Global.GraphicsAPI.OpenGL:
+                        Renderer = new SEOpenGLRender();
+                        Renderer.Initialize();
+                        break;
+                    case GraphicsAPI.OpenGL2D:
+                        Renderer = new SE2DOpenGLRender();
+                        Renderer.Initialize();
+                        break;
+                    case GraphicsAPI.SDL2D:
+                        Renderer = new SE2DSDLRender();
+                        Renderer.Initialize();
+                        break;
+                    default:
+                        Renderer = new SEVulkanRender();
+                        Renderer.Initialize();
+                        break;
+
+                }
+            }
+            else
+            {
+                switch (GVariables.GraphicsAPI)
+                {
+                    case Global.GraphicsAPI.Vulkan:
+
+                        //通用VK
+                        Renderer = new SEVulkanRender();
+                        Renderer.Initialize();
+                        break;
+                    case Global.GraphicsAPI.OpenGL:
+                        Renderer = new SEOpenGLRender();
+                        Renderer.Initialize();
+                        break;
+                    case GraphicsAPI.OpenGL2D:
+                        Renderer = new SE2DOpenGLRender();
+                        Renderer.Initialize();
+                        break;
+                    case GraphicsAPI.SDL2D:
+                        Renderer = new SE2DSDLRender();
+                        Renderer.Initialize();
+                        break;
+                    default:
+                        Renderer = new SEVulkanRender();
+                        Renderer.Initialize();
+                        break;
+                }
+            }
         }
     }
 }

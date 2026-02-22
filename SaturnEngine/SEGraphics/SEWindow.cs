@@ -45,7 +45,7 @@ namespace SaturnEngine.SEGraphics
         public bool HDRSupport { get; internal set; } = false;
         public int UseMonitorIndex { get; internal set; } = 0;
         public int TotalMonitorCount { get; internal set; } = 0;
-        public Render Renderer { get; internal set; } = null!; //渲染器
+        public Render? Renderer { get; internal set; } = null!; //渲染器
         public DelegateQueue Delegates { get; internal set; } = new DelegateQueue("Main Thread DIL");//主队列事件执行
         public DelegateQueue RenderDel { get; internal set; } = new DelegateQueue("Render Thread DIL");//主队列事件执行
         public DelegateQueue AudioDel { get; internal set; } = new DelegateQueue("Audio Thread DIL");//主队列事件执行

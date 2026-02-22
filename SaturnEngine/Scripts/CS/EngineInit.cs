@@ -11,6 +11,7 @@ public class Program
         SELogger.Log("自定义初始化开始", "CS SCRIPT");
         //当前配置
         GVariables.ProgramType = ProgramTypes.p2D;
+        GVariables.CurrentWindowHostType = WindowHostType.SDL;
         if (OperatingSystem.IsWindows())
         {
             GVariables.OS = OS.Windows;
@@ -53,7 +54,7 @@ public class Program
         {
             GVariables.OS = OS.MacOS;
 
-            GVariables.GraphicsAPI = GraphicsAPI.Vulkan;
+            GVariables.GraphicsAPI = GraphicsAPI.SDL2D;
             GVariables.GraphicsBaseLevel = new Version(1, 1);
             GVariables.GraphicsAimLevel = new Version(1, 4);
 
