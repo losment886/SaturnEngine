@@ -1152,6 +1152,8 @@ namespace SaturnEngine.SEInput
 
         public static Glfw g = Glfw.GetApi();
 
+        public static bool UseWinHook = true;
+
         public static WindowHandle* ThisWindow;
         /// <summary>
         /// 检测是否按下某个特定的按键

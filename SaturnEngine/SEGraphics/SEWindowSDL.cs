@@ -17,6 +17,13 @@ namespace SaturnEngine.SEGraphics
     public unsafe class SEWindowSDL : SEWindow
     {
        
+        public SEWindowSDL() 
+        {
+            Size = new Vector2D(800, 600);
+            Position = new Vector2D(100, 100);
+        }
+
+
         string _title;
         SDLWindowPtr _window;
         //SDLRendererPtr? _renderer;
@@ -160,6 +167,7 @@ namespace SaturnEngine.SEGraphics
         public override void Close()
         {
             SDL.DestroyWindow(_window);
+            GVariables.OnClose();
         }
         double er = 0;
         double rr = 0;
@@ -300,9 +308,13 @@ namespace SaturnEngine.SEGraphics
                 foreach (var item in dl)
                 {
                     Console.WriteLine(item);
-                    if (GVariables.GraphicsAPI == GraphicsAPI.SDL2D && item.ToLower().IndexOf("d12") > 1)
+                    if (GVariables.GraphicsAPI == GraphicsAPI.SDL2D )
                     {
-                        id = co;
+                        if((GVariables.OS == OS.Windows && item.ToLower().IndexOf("d12") > 1) || (item.ToLower() == "vulkan"))
+                        {
+                            id = co;
+                        }
+                        
                     }
                     co++;
                 }
@@ -315,6 +327,7 @@ namespace SaturnEngine.SEGraphics
             if (!Renderer.CreateDevice(id))
             {
                 //throw new Exception("Failed to create rendering device!");
+                SELogger.Error("Failed to create rendering device!");
             }
             
             BasicInput.WSize = new POINT((int)Size.X, (int)Size.Y);
@@ -428,7 +441,7 @@ namespace SaturnEngine.SEGraphics
                         Renderer.Initialize();
                         break;
                     case GraphicsAPI.SDL2D:
-                        Renderer = new SE2DSDLRender();
+                        Renderer = new SE2DSDLRenderSDL();
                         Renderer.Initialize();
                         break;
                     default:
@@ -457,7 +470,7 @@ namespace SaturnEngine.SEGraphics
                         Renderer.Initialize();
                         break;
                     case GraphicsAPI.SDL2D:
-                        Renderer = new SE2DSDLRender();
+                        Renderer = new SE2DSDLRenderSDL();
                         Renderer.Initialize();
                         break;
                     default:

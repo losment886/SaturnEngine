@@ -227,31 +227,31 @@ namespace SaturnEngine.AvaloniaExport
             {
                 if (BasicInput.IfKeyDown(Keys.J))
                 {
-                    //Console.WriteLine("R++ : " + (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X);
-                    (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X += 0.1;
+                    //Console.WriteLine("R++ : " + (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.X);
+                    (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.X += 0.1;
                 }
                 if (BasicInput.IfKeyDown(Keys.K))
                 {
-                    (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Y += 0.1;
+                    (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Y += 0.1;
                 }
                 if (BasicInput.IfKeyDown(Keys.L))
                 {
-                    (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Z += 0.1;
+                    (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Z += 0.1;
                 }
             }
             if (BasicInput.IfKeyDown(Keys.Down))
             {
                 if (BasicInput.IfKeyDown(Keys.J))
                 {
-                    (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X -= 0.1;
+                    (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.X -= 0.1;
                 }
                 if (BasicInput.IfKeyDown(Keys.K))
                 {
-                    (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Y -= 0.1;
+                    (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Y -= 0.1;
                 }
                 if (BasicInput.IfKeyDown(Keys.L))
                 {
-                    (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Z -= 0.1;
+                    (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Z -= 0.1;
                 }
             }
             if (BasicInput.IfKeyDown(Keys.Back))

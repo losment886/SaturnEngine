@@ -16,6 +16,7 @@ using SaturnEngine.SEUI;
 using SaturnEngine.SEUIControls;
 //using SEDumper;
 using System.Globalization;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -157,6 +158,19 @@ namespace Windows_Test_Project
 
             SELogger.Log("初始化主机");
             GameHost gh = new GameHost();
+
+            SELogger.Log("启用无线调试");
+            SENLTcpHostConfig hc = new SENLTcpHostConfig();
+            hc.HostName = "DebuggerHost";
+            hc.ListenIp = IPAddress.Any;
+            hc.ListenPort = 10550;
+
+            SENLDebuggerFunctionConfig fc = new SENLDebuggerFunctionConfig();
+            fc.FunctionList = new List<KeyValuePair<string, Action<string[]>>>();
+            fc.FunctionList.Add(new KeyValuePair<string, Action<string[]>>("TestFunc", (args) => { SELogger.Log("TestFunc called with args: " + string.Join(", ", args)); }));
+            fc.FunctionList.Add(new KeyValuePair<string, Action<string[]>>("Close", (args) => { SELogger.Log("This Window Will Be Closed"); GVariables.MainWindow.Close(); }));
+            SENetLogger.Register(SENLHostType.TCP, SENLTcpMethod.Host, hc, fc);
+
             SELogger.Log("加载游戏");
             gh.LoadGame(new BasicGame());
             SELogger.Log("设置窗口样式");
@@ -335,31 +349,31 @@ namespace Windows_Test_Project
                 {
                     if (BasicInput.IfKeyDown(Keys.J))
                     {
-                        //Console.WriteLine("R++ : " + (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X);
-                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X += 0.1;
+                        //Console.WriteLine("R++ : " + (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.X);
+                        (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.X += 0.1;
                     }
                     if (BasicInput.IfKeyDown(Keys.K))
                     {
-                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Y += 0.1;
+                        (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Y += 0.1;
                     }
                     if (BasicInput.IfKeyDown(Keys.L))
                     {
-                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Z += 0.1;
+                        (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Z += 0.1;
                     }
                 }
                 if (BasicInput.IfKeyDown(Keys.Down))
                 {
                     if (BasicInput.IfKeyDown(Keys.J))
                     {
-                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.X -= 0.1;
+                        (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.X -= 0.1;
                     }
                     if (BasicInput.IfKeyDown(Keys.K))
                     {
-                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Y -= 0.1;
+                        (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Y -= 0.1;
                     }
                     if (BasicInput.IfKeyDown(Keys.L))
                     {
-                        (GVariables.MainWindow.Renderer as SE2DSDLRender).BackgroundColor.Z -= 0.1;
+                        (GVariables.MainWindow.Renderer as SE2DSDLRenderSDL).BackgroundColor.Z -= 0.1;
                     }
                 }
                 if (BasicInput.IfKeyDown(Keys.Back))

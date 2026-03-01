@@ -107,6 +107,9 @@ namespace SaturnEngine.Global
 #else
         public static bool DebugMode = false;
 #endif
+
+        public static bool LogOnline = true;
+
         public static void OnClose()
         {
             OnEngineClose?.Invoke();

@@ -12,6 +12,9 @@ public class Program
         //当前配置
         GVariables.ProgramType = ProgramTypes.p2D;
         GVariables.CurrentWindowHostType = WindowHostType.SDL;
+        
+        //Glfw
+        //GVariables.CurrentWindowHostType = WindowHostType.Glfw;
         if (OperatingSystem.IsWindows())
         {
             GVariables.OS = OS.Windows;
@@ -58,11 +61,6 @@ public class Program
             GVariables.GraphicsBaseLevel = new Version(1, 1);
             GVariables.GraphicsAimLevel = new Version(1, 4);
 
-            //SELogger.Log("识别到MacOS", "CS SCRIPT");
-            //just for testing
-            //GVariables.GraphicsAPI = GraphicsAPI.SDL2D;
-            //GVariables.GraphicsBaseLevel = new Version(3, 3);
-            //GVariables.GraphicsAimLevel = new Version(4, 0);
         }
         else
         {
@@ -90,7 +88,8 @@ public class Program
         GVariables.Developer = "Losment";
         GVariables.ProgramName = "Saturn Engine";
         GVariables.AllowUseWinHook = false;
-
+        GVariables.GraphicsAPI = GraphicsAPI.SDL2D;
+        GVariables.CurrentWindowHostType = WindowHostType.SDL;
         SELogger.Log("自定义初始化结束", "CS SCRIPT");
     }
 }

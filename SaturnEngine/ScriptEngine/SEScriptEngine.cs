@@ -48,6 +48,7 @@ namespace SaturnEngine.ScriptEngine
         }
         public SEScriptEngine()
         {
+            SELogger.Log("脚本引擎类初始化");
             csdep = new List<string>();
             jscripts = new Dictionary<ulong, V8Script>();
             csscripts = new Dictionary<ulong, Assembly>();
@@ -502,6 +503,7 @@ namespace SaturnEngine.ScriptEngine
 
         public void Init(EnableScriptType enabletype = EnableScriptType.All)
         {
+            SELogger.Log("Step1");
             if ((enabletype & EnableScriptType.CSharp) == EnableScriptType.CSharp)
             {
                 EnableCSharp = true;
@@ -510,12 +512,14 @@ namespace SaturnEngine.ScriptEngine
             {
                 if (GVariables.DebugMode)
                 {
+                    SELogger.Log("Step21");
                     JSEngine = new V8ScriptEngine(V8ScriptEngineFlags.EnableDebugging);
                     JSEngine.DocumentSettings.AccessFlags = Microsoft.ClearScript.DocumentAccessFlags.EnableAllLoading;
                     JSEngine.DefaultAccess = ScriptAccess.Full;
                 }
                 else
                 {
+                    SELogger.Log("Step22");
                     JSEngine = new V8ScriptEngine();
                     JSEngine.DocumentSettings.AccessFlags = Microsoft.ClearScript.DocumentAccessFlags.EnableAllLoading;
                     JSEngine.DefaultAccess = ScriptAccess.Full;
@@ -530,6 +534,7 @@ namespace SaturnEngine.ScriptEngine
             {
                 EnablePython = true;
             }
+            SELogger.Log("Step3");
             DefalutReferences.Add(MetadataReference.CreateFromFile(typeof(SEBase).Assembly.Location));
             string dllp = System.IO.Path.GetDirectoryName(typeof(object).Assembly.Location) ?? "./";
             Directory.GetFiles(dllp, "*.dll").ToList().ForEach((f) =>
@@ -547,6 +552,7 @@ namespace SaturnEngine.ScriptEngine
                     //忽略无法加载的DLL
                 }
             });
+            SELogger.Log("Step4");
             dllp = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location) ?? "./";
             Directory.GetFiles(dllp, "*.dll").ToList().ForEach((f) =>
             {

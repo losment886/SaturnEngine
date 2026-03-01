@@ -502,7 +502,7 @@ namespace SaturnEngine.SEGraphics
                         Renderer.Initialize();
                         break;
                     case GraphicsAPI.SDL2D:
-                        Renderer = new SE2DSDLRender();
+                        Renderer = new SE2DSDLRenderGlfw();
                         Renderer.Initialize();
                         break;
                     default:
@@ -531,7 +531,7 @@ namespace SaturnEngine.SEGraphics
                         Renderer.Initialize();
                         break;
                     case GraphicsAPI.SDL2D:
-                        Renderer = new SE2DSDLRender();
+                        Renderer = new SE2DSDLRenderGlfw();
                         Renderer.Initialize();
                         break;
                     default:
@@ -755,6 +755,7 @@ namespace SaturnEngine.SEGraphics
                 //Console.WriteLine(nt);
                 if (g.WindowShouldClose(ThisWindow))
                 {
+                    SELogger.Log("CloseWindow");
                     if(GVariables.OS == OS.Windows && BasicInput.UseWinHook)
                     {
                         WinAPI.InputWin.Mouse.UninstallHook();

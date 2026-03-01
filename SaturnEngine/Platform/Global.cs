@@ -12,6 +12,7 @@ using SaturnEngine.SEMath;
 using SaturnEngine.SEUI;
 using System.Globalization;
 using System.Net.Sockets;
+using static SaturnEngine.Asset.SEControl;
 
 namespace SaturnEngine.Platform
 {
@@ -130,7 +131,7 @@ namespace SaturnEngine.Platform
                 GVariables.GraphicsAimLevel = new Version(1, 3);
             }
 
-
+            SENetLogger.Init(); 
 
             GVariables.ProgramDataDir = (Environment.CurrentDirectory + $"/SEC/{GVariables.ProgramName}/data/");
             GVariables.SystemTempDir = (Environment.CurrentDirectory + $"/SEC/{GVariables.ProgramName}/cache/");

@@ -23,6 +23,7 @@
     <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
   </ItemGroup>
 
+
   <ItemGroup>
     <ProjectReference Include="..\CrossPlatformScriptRunner\CrossPlatformScriptRunner.csproj" />
   </ItemGroup>
