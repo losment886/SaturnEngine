@@ -20,8 +20,4 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\LRLPackager\LRLPackager.csproj" />
-  </ItemGroup>
 </Project>
