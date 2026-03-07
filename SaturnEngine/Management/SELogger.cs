@@ -236,8 +236,7 @@ namespace SaturnEngine.Management
             try
             {
                 GVariables.OnEngineClose += EngineClosed;
-
-                SystemFunctionList.Add(new KeyValuePair<string, Action<string[]>>("run", SESystemDebugFunction.run));
+                SESystemDebugFunction.Adder(SystemFunctionList);
             }
             catch { }
         }
