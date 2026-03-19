@@ -16,3 +16,6 @@ SaturnEngine主代码
   VisionOS
   HarmonyOS NEXT
   Linux(kernel > 5)
+
+# Notice
+即将架构大改（虽然没啥人来
