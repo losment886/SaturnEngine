@@ -4,6 +4,7 @@ SaturnEngine主代码
 # Feature
 跨平台的2/3D游戏引擎
 基于C#打造
+目前还只是最原始状态
 
 目前可用平台：
   Windows10
