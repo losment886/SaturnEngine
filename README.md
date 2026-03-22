@@ -7,16 +7,15 @@ SaturnEngine主代码
 目前还只是最原始状态
 
 目前可用平台：
-  Windows10
-  Windows11
-  MacOS (>16)
-  Android (>10)
+  Windows10/11/server19/22/25,
+  MacOS
 
 未来目标平台：
-  iOS(iPadOS)
-  VisionOS
-  HarmonyOS NEXT
-  Linux(kernel > 5)
+  iOS(iPadOS),
+  VisionOS,
+  HarmonyOS NEXT,
+  Linux,
+  Android
 
 # Notice
 即将架构大改（虽然没啥人来
