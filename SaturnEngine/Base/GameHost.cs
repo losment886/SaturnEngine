@@ -1,5 +1,6 @@
 ﻿using SaturnEngine.Asset;
 using SaturnEngine.Global;
+using SaturnEngine.Performance;
 using SaturnEngine.SEGraphics;
 
 namespace SaturnEngine.Base
@@ -11,6 +12,7 @@ namespace SaturnEngine.Base
     {
         public SEWindow SW { get; private set; } = null!;
         public Game G { get; private set; } = null!;
+        public SEThread MainThread;
         public GameHost()
         {
             Platform.Global.EngineInit();
@@ -66,6 +68,18 @@ namespace SaturnEngine.Base
             }
 
             SW.RunWindow();
+
+            MainThread = Dispatcher.CreateThreadFromExistedThread();
+            MainThreadWorker();
+        }
+        void MainThreadWorker()
+        {
+            MainThread.SetFPS(10000);
+            while (true) 
+            {
+                MainThread.WaitForFPS();
+            }
+
         }
     }
 }

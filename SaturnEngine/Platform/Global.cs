@@ -69,6 +69,7 @@ namespace SaturnEngine.Platform
         {
             GVariables.OSVersion = Environment.OSVersion.Version;
             GVariables.ProgramType = ProgramTypes.p3D;
+            //GVariables.MainWindows = new List<SEWindow>();
             if (OperatingSystem.IsWindows())
             {
                 GVariables.OS = OS.Windows;

@@ -1,41 +1,72 @@
 using SaturnEngine.Base;
+using SaturnEngine.Performance;
+using static SaturnEngine.Management.Event.DelegateQueue;
 namespace SaturnEngine.Management.Event
 {
     public class DelegateQueue : SEBase
     {
+        
+        public class DelegatePackage
+        {
+            public Action T;
+            public bool Invoked;
+            public DelegatePackage(Action t)
+            {
+                T = t;
+                Invoked = false;
+            }
+            public bool WaitForInvoke(ulong timeout = 1000)
+            {
+                
+                while (!Invoked)
+                {
+                    //Thread.Sleep(1);
+                    Dispatcher.Sleep(1);
+                    timeout -= 1;
+                    if (timeout <= 0)
+                        break;
+                }
+                return Invoked;
+            }
+        }
         public bool IsEmpty { get => tasks.Count == 0; }
         public bool IsInvoking { get; set; }
-        List<Action> tasks;
-        List<Action> taskscac;
+        List<DelegatePackage> tasks;
+        List<DelegatePackage> taskscac;
         public DelegateQueue(string nm)
             : base(nm, nm + "'s DelegateQueue")
         {
-            tasks = new List<Action>();
-            taskscac = new List<Action>();
+            tasks = new List<DelegatePackage>();
+            taskscac = new List<DelegatePackage>();
         }
         public void Clean()
         {
             tasks.Clear();
         }
-        public void Add(Action a)
+        public DelegatePackage? Add(Action a)
         {
             try
             {
-                if(!IsInvoking)
+                DelegatePackage dp;
+                if (!IsInvoking)
                 {
-                    tasks.Add(a);
+                    dp = new DelegatePackage(a);
+                    tasks.Add(dp);
                 }
                 else
                 {
                     //throw new InvalidOperationException("Cannot add new tasks while invoking.");
-                    taskscac.Add(a);
+                    dp = new DelegatePackage(a);
+                    taskscac.Add(dp);
                 }   
+                return dp;
             }
             catch (Exception ex)
             {
                 // + Name + " when adding Event!!!"
                 SELogger.Error(new Str([new Str("Error in ", new Str.StrStyle(Asset.SEColor.Red)), new Str(Name, new Str.StrStyle(Asset.SEColor.Blue)), new Str(" when adding Event!!!", new Str.StrStyle(Asset.SEColor.Red)), ex.ToString()]));
             }
+            return null;
         }
         public void InvokeAll()
         {
@@ -46,7 +77,8 @@ namespace SaturnEngine.Management.Event
                 {
                     var t = tasks[0];
                     tasks.RemoveAt(0);
-                    t?.Invoke();
+                    t?.T?.Invoke();
+                    t.Invoked = true;
                 }
                 catch (Exception ex)
                 {

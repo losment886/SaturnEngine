@@ -22,4 +22,9 @@ namespace SaturnEngine.Base
     {
         public abstract string GetWindowStyle();
     }
+    public interface IKeyboardInput
+    {
+        public abstract void OnKeyDown(KeyboardKey key);
+        public abstract void OnKeyUp(KeyboardKey key);
+    }
 }

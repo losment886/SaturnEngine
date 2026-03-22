@@ -1,4 +1,5 @@
 ﻿using SaturnEngine.Global;
+using SaturnEngine.Management.Event;
 using SaturnEngine.Performance;
 using SaturnEngine.Security;
 
@@ -9,6 +10,9 @@ namespace SaturnEngine.Base
     /// </summary>
     public abstract class SEBase
     {
+        public static DelegateQueue MainThreadQueue = new DelegateQueue("SaturnEngine MainThread DelegateQueue");
+
+
 
         UUID uid;
         string name;

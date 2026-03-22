@@ -45,7 +45,8 @@ namespace SaturnEngine.Global
         public static string? LanguageResPath;//engine语言资源路径
         public static string? UserLanguageResPath;//用户语言资源路径
 
-        public static readonly Version EngineVersion = new Version(3, 79, 3, 86);//Pre release
+        //从接下来的大改开始正式使用版本号来标记引擎版本，之前的版本号只是为了测试功能而已
+        public static readonly Version EngineVersion = new Version(0, 0, 0, 1);
 
         public static InternetMethod? InternetMethod;
         public static bool IPv6;
@@ -72,7 +73,8 @@ namespace SaturnEngine.Global
 
         public static Dictionary<ulong, LRL>? GlobalResources = new Dictionary<ulong, LRL>();
 
-        public static SEWindow MainWindow;
+        //public static SEWindow MainWindow;
+        public static List<SEWindow> MainWindows = new List<SEWindow>();
         //public static SEWindowSDL MainWindowSDL;
 
         public static SEAudioManager AudioManager;

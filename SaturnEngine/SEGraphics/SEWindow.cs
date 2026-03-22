@@ -14,8 +14,44 @@ using System.Runtime.InteropServices;
 
 namespace SaturnEngine.SEGraphics
 {
+    public enum SEWindowAttribute
+    {
+        #region 窗体属性
+        Window_Size,
+        Window_Position,
+        Window_Title,
+        Window_Monitor,
+        Window_Resizable,
+        Window_FullScreen,
+        Window_Icon,
+        Window_Cursor,
+
+        #endregion
+        #region 渲染属性
+        Render_EventRate,
+        Render_RenderRate,
+        Render_AudioRate,
+        Render_MainThreadRate,
+        Render_EventRateBackground,
+        Render_RenderRateBackground,
+        Render_AudioRateBackground,
+        Render_MainThreadRateBackground,
+        Render_HDR,
+        #endregion
+
+    }
     public abstract class SEWindow : SEBase
     {
+
+        public SEWindow() 
+        {
+            GVariables.MainWindows.Add(this);
+        }
+
+        ~SEWindow()
+        {
+            GVariables.MainWindows.Remove(this);
+        }
         public WindowHostType HostType { get; internal set; }
 
         public SEThread MainThread { get; internal set; }
@@ -155,11 +191,18 @@ namespace SaturnEngine.SEGraphics
         /// </summary>
         public abstract void Close();
         /// <summary>
-        /// 运行窗口
+        /// 运行窗口，有所更改，此函数不再接管主线程，主线程的工作在OnMainThreadInvoke函数中执行，主线程将负责调用UpdateLoop的Update函数以及执行Delegates队列中的事件
         /// </summary>
         public abstract void RunWindow();
 
         public abstract nint GetWindowHandle();
+
+        internal abstract void OnMainThreadInvoke();
+
+
+        public abstract bool SetAttribute(SEWindowAttribute attribute, object[] value);
+        
+        public abstract object GetAttribute(SEWindowAttribute attribute);
 
 
         internal double _EventRate = 1000;
