@@ -12,6 +12,7 @@ namespace SaturnEngine.Base
         public List<ulong> ThisSTCs { get; private set; }
         public int CurrentSceneIndex { get; private set; } = -1;
         public UIScene? UIScene { get; set; } = null;//UI场景，有就用，没有就算了
+        public int BindSEWindowID { get; private set; } = -1;
         /// <summary>
         /// 添加场景
         /// </summary>
@@ -70,7 +71,7 @@ namespace SaturnEngine.Base
             {
                 ThisScenes[CurrentSceneIndex].Activity();
             }
-            GVariables.MainWindow?.Renderer?.SetScene(CurrentSceneIndex);
+            GVariables.MainWindows[BindSEWindowID].Renderer?.SetScene(CurrentSceneIndex);
         }
         /// <summary>
         /// 初始化

@@ -123,7 +123,7 @@ void main()
         public override void Initialize()
         {
             g = Glfw.GetApi();
-            w = (WindowHandle*)(GVariables.MainWindow.GetWindowHandle().ToPointer());
+            w = (WindowHandle*)(GVariables.MainWindows[0].GetWindowHandle().ToPointer());
             g.MakeContextCurrent(w);
             gl = GL.GetApi(g.GetProcAddress);
             wgl = WGL.GetApi();
@@ -137,7 +137,7 @@ void main()
                 wglSwapIntervalEXT = (n) => { return false; };
             }
             wglSwapIntervalEXT.Invoke(0); // Disable VSync
-            gl.Viewport(0, 0, (uint)GVariables.MainWindow.Size.X, (uint)GVariables.MainWindow.Size.Y);
+            gl.Viewport(0, 0, (uint)GVariables.MainWindows[0].Size.X, (uint)GVariables.MainWindows[0].Size.Y);
             gl.ClearColor(0.5f, 0.5f, 0.5f, 1);
 
 
@@ -146,7 +146,7 @@ void main()
 
             Console.WriteLine($"Graphics Card Vendor: {vendor}");
             Console.WriteLine($"Graphics Card Model: {renderer}");
-            SaturnEngine.Platform.Global.SetGPU(vendor);
+            //SaturnEngine.Platform.Global.SetGPU(vendor);
 
 
         }

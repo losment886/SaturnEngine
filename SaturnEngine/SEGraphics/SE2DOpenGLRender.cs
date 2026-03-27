@@ -89,7 +89,7 @@ namespace SaturnEngine.SEGraphics
         public override void Initialize()
         {
             g = Glfw.GetApi();
-            g.MakeContextCurrent((WindowHandle*)(GVariables.MainWindow.GetWindowHandle().ToPointer()));
+            //g.MakeContextCurrent((WindowHandle*)(GVariables.MainWindow.GetWindowHandle().ToPointer()));
             gl = GL.GetApi(g.GetProcAddress);
             
 
@@ -108,7 +108,7 @@ namespace SaturnEngine.SEGraphics
 
             //Console.WriteLine($"Graphics Card Vendor: {vendor}");
             //Console.WriteLine($"Graphics Card Model: {renderer}");
-            SaturnEngine.Platform.Global.SetGPU(vendor);
+            //SaturnEngine.Platform.Global.SetGPU(vendor);
 
             // 初始化渲染资源
             textureCache = new Dictionary<uint, uint>();
@@ -180,9 +180,9 @@ namespace SaturnEngine.SEGraphics
 
         public override void SetScene(int index)
         {
-            var s = GVariables.ThisGame.ThisScenes[index];
-            currentScene = s;
-            LoadSceneSprites(s);
+            //var s = GVariables.ThisGame.ThisScenes[index];
+            //currentScene = s;
+            //LoadSceneSprites(s);
         }
 
         public override void SetSize(int width, int height)
@@ -196,12 +196,14 @@ namespace SaturnEngine.SEGraphics
 
         public override void SetUIScene(bool enable)
         {
+            /*
             renderUI = enable;
             if (enable && GVariables.ThisGame.UIScene != null)
             {
                 currentUIScene = GVariables.ThisGame.UIScene;
                 LoadUIControls(currentUIScene);
             }
+            */
         }
 
         #region 私有方法
@@ -432,7 +434,7 @@ namespace SaturnEngine.SEGraphics
 
         private void UpdateUIControlPositions(double deltaTime)
         {
-            GVariables.ThisGame.UIScene.Controls.Flush(GVariables.MainWindow.Size);
+            //GVariables.ThisGame.UIScene.Controls.Flush(GVariables.MainWindow.Size);
             //SELogger.Log("PROC UI");
             foreach (var uiControl in uiControls)
             {

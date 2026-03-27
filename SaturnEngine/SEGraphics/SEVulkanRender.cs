@@ -37,7 +37,7 @@ namespace SaturnEngine.SEGraphics
 
         public override void PrepareFrame(double deltaTime)
         {
-            GVariables.ThisGame.UIScene.Controls.Flush(GVariables.MainWindow.Size);
+            //GVariables.ThisGame.UIScene.Controls.Flush(GVariables.MainWindow.Size);
         }
         public override void Initialize()
         {

@@ -394,10 +394,18 @@ namespace SaturnEngine.SEGraphics
             //SetRenderRate(300);
 
         }
-        public override void Close()
+
+        public override void OnClose()
         {
+            //throw new NotImplementedException();
             Glfw.GetApi().SetWindowShouldClose(ThisWindow, true);
         }
+
+        public override void OnStart()
+        {
+            //throw new NotImplementedException();
+        }
+
         ulong p;
         private void RenderThreadFunc()
         {
@@ -671,10 +679,7 @@ namespace SaturnEngine.SEGraphics
             RenderThread.Start();
             AudioThread.Start();
 
-            if (GVariables.ThisGame.UIScene != null)
-            {
-                Renderer.SetUIScene(true);
-            }
+            
             bool setrat = false;
 
             double omx = 0, omy = 0;
@@ -854,13 +859,33 @@ namespace SaturnEngine.SEGraphics
         public void CloseWindow()
         {
             GVariables.EngineRunning = false;
-            GVariables.ThisGame?.Exit();
+            //GVariables.ThisGame?.Exit();
             GVariables.OnClose();
+        }
+
+        public override void OnUpdate()
+        {
+            
         }
 
         public override nint GetWindowHandle()
         {
             return (nint)((void*)ThisWindow);
+        }
+
+        internal override void OnMainThreadInvoke()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool SetAttribute(SEWindowAttribute attribute, object[] value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object GetAttribute(SEWindowAttribute attribute)
+        {
+            throw new NotImplementedException();
         }
 
         public SEWindowOpenGL()

@@ -40,8 +40,8 @@ namespace SaturnEngine.AvaloniaExport
             hwnd = handle.Handle;
             GameHost gh = new GameHost();
             GVariables.CurrentWindowHostType = WindowHostType.Avalonia;
-            gh.LoadGame(ThisGame);
-            (gh.SW as SEWindowAvalonia).hwnd = hwnd;
+            //gh.LoadGame(ThisGame);
+            //(gh.SW as SEWindowAvalonia).hwnd = hwnd;
             gh.Start();
             //this.SetCurrentValue(GameHostProperty, gh);
             //GVariables.ThisGameHost = gh;

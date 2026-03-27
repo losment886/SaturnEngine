@@ -10,7 +10,7 @@ public class Program
     {
         SELogger.Log("自定义初始化开始", "CS SCRIPT");
         //当前配置
-        GVariables.ProgramType = ProgramTypes.p2D;
+        GVariables.ProgramType = ProgramTypes.Game2D;
         GVariables.CurrentWindowHostType = WindowHostType.SDL;
         
         //Glfw

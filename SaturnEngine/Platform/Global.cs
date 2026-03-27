@@ -18,39 +18,7 @@ namespace SaturnEngine.Platform
 {
     public class Global
     {
-        public static void SetGPU(string vd)
-        {
-            var cmp = vd.ToLower().Trim();
-            if (cmp.IndexOf("intel") >= 0)
-            {
-                GVariables.GpuVendor = GpuVendor.Intel;
-
-            }
-            else if (cmp.IndexOf("amd") >= 0 || cmp.IndexOf("ati") >= 0)
-            {
-                GVariables.GpuVendor = GpuVendor.AMD;
-            }
-            else if (cmp.IndexOf("nvidia") >= 0)
-            {
-                GVariables.GpuVendor = GpuVendor.Nvidia;
-            }
-            else if (cmp.IndexOf("moorethreads") >= 0)
-            {
-                GVariables.GpuVendor = GpuVendor.MooreThreads;
-            }
-            else if (cmp.IndexOf("mail") >= 0)
-            {
-                GVariables.GpuVendor = GpuVendor.Mail;
-            }
-            else if (cmp.IndexOf("adreno") >= 0)
-            {
-                GVariables.GpuVendor = GpuVendor.Adreno;
-            }
-            else
-            {
-                GVariables.GpuVendor = GpuVendor.Unknow;
-            }
-        }
+        
         public static void LoadGlobalResource(ulong nmstc)
         {
             //SEResource ser = new SEResource($"./Res/{nmstc}.spk");
@@ -68,69 +36,9 @@ namespace SaturnEngine.Platform
         public static void EngineInit()
         {
             GVariables.OSVersion = Environment.OSVersion.Version;
-            GVariables.ProgramType = ProgramTypes.p3D;
+            GVariables.ProgramType = ProgramTypes.Game3D;
             //GVariables.MainWindows = new List<SEWindow>();
-            if (OperatingSystem.IsWindows())
-            {
-                GVariables.OS = OS.Windows;
-                if (GVariables.OSVersion.Major <= 7)
-                {
-                    throw new PlatformNotSupportedException();
-                }
-                //DX default
-                GVariables.GraphicsAPI = GraphicsAPI.DirectX;
-                GVariables.GraphicsBaseLevel = new Version(12, 0);
-                GVariables.GraphicsAimLevel = new Version(12, 2);
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                GVariables.OS = OS.Linux;
-
-                GVariables.GraphicsAPI = GraphicsAPI.Vulkan;
-                GVariables.GraphicsBaseLevel = new Version(1, 1);
-                GVariables.GraphicsAimLevel = new Version(1, 4);
-            }
-            else if (OperatingSystem.IsAndroid())
-            {
-                GVariables.OS = OS.Android;
-
-                GVariables.GraphicsAPI = GraphicsAPI.Vulkan;
-                GVariables.GraphicsBaseLevel = new Version(1, 1);
-                GVariables.GraphicsAimLevel = new Version(1, 3);
-            }
-            else if (OperatingSystem.IsIOS())
-            {
-                GVariables.OS = OS.IOS;
-
-                GVariables.GraphicsAPI = GraphicsAPI.Vulkan;
-                GVariables.GraphicsBaseLevel = new Version(1, 1);
-                GVariables.GraphicsAimLevel = new Version(1, 3);
-            }
-            else if (OperatingSystem.IsMacOS())
-            {
-                GVariables.OS = OS.MacOS;
-
-                GVariables.GraphicsAPI = GraphicsAPI.Vulkan;
-                GVariables.GraphicsBaseLevel = new Version(1, 1);
-                GVariables.GraphicsAimLevel = new Version(1, 3);
-            }
-            else
-            {
-#if HARMONYOS
-                GVariables.OS = OS.HarmonyOS;
-#elif HYPEROS
-                GVariables.OS = OS.HyperOS;
-#elif XBOX
-                GVariables.OS = OS.XBox;
-#elif PS
-                GVariables.OS = OS.PlayStation; 
-#else
-                GVariables.OS = OS.Unknow;
-#endif
-                GVariables.GraphicsAPI = GraphicsAPI.Vulkan;
-                GVariables.GraphicsBaseLevel = new Version(1, 1);
-                GVariables.GraphicsAimLevel = new Version(1, 3);
-            }
+            
 
             SENetLogger.Init(); 
 

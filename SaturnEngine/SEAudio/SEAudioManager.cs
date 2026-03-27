@@ -30,38 +30,38 @@ namespace SaturnEngine.SEAudio
             //ManagedBass.Bass.Apply3D();
 
         }
-        public void CreateDevice() => GVariables.MainWindow.AudioDel.Add(createDevice);
+        //public void CreateDevice() => GVariables.MainWindow.AudioDel.Add(createDevice);
         private void createDevice()
         {
             
             IsEnable = false;
         }
-        public void AddChannel(string fp, SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => addChannel(fp, s));
+        //public void AddChannel(string fp, SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => addChannel(fp, s));
         private void addChannel(string fp, SEChannel s)
         {
             
         }
-        public void RemoveChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => removeChannel(s));
+        //public void RemoveChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => removeChannel(s));
         private void removeChannel(SEChannel s)
         {
             
         }
-        public void PlayChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => playChannel(s));
+        //public void PlayChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => playChannel(s));
         private void playChannel(SEChannel s)
         {
             //Bass.ChannelPlay(MixStreams[s.id]);
         }
-        public void StopChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => stopChannel(s));
+        //public void StopChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => stopChannel(s));
         private void stopChannel(SEChannel s)
         {
             //Bass.ChannelStop(MixStreams[s.id]);
         }
-        public void PauseChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => pauseChannel(s));
+        //public void PauseChannel(SEChannel s) => GVariables.MainWindow.AudioDel.Add(() => pauseChannel(s));
         private void pauseChannel(SEChannel s)
         {
             //Bass.ChannelPause(MixStreams[s.id]);
         }
-        public void SetVolumeChannel(SEChannel s, float volume) => GVariables.MainWindow.AudioDel.Add(() => setVolumeChannel(s, volume));
+        //public void SetVolumeChannel(SEChannel s, float volume) => GVariables.MainWindow.AudioDel.Add(() => setVolumeChannel(s, volume));
         private void setVolumeChannel(SEChannel s, float volume)
         {
             //Bass.ChannelSetAttribute(MixStreams[s.id], ChannelAttribute.Volume, volume);

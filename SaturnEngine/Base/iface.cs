@@ -1,4 +1,5 @@
-﻿using SaturnEngine.SEMath;
+﻿using SaturnEngine.SEInput;
+using SaturnEngine.SEMath;
 
 namespace SaturnEngine.Base
 {
@@ -24,7 +25,7 @@ namespace SaturnEngine.Base
     }
     public interface IKeyboardInput
     {
-        public abstract void OnKeyDown(KeyboardKey key);
-        public abstract void OnKeyUp(KeyboardKey key);
+        public abstract void OnKeyDown(Keys key);
+        public abstract void OnKeyUp(Keys key);
     }
 }

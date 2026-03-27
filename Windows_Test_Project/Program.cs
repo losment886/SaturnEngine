@@ -61,7 +61,6 @@ namespace Windows_Test_Project
             Thread.Sleep(s);
             Console.Write("\n");
             Thread.Sleep(s);
-            //Console.WriteLine("少女卡机中...");
             Console.Write("少");
             Thread.Sleep(s);
             Console.Write("女");
@@ -168,13 +167,13 @@ namespace Windows_Test_Project
             SENLDebuggerFunctionConfig fc = new SENLDebuggerFunctionConfig();
             fc.FunctionList = new List<KeyValuePair<string, Action<string[]>>>();
             fc.FunctionList.Add(new KeyValuePair<string, Action<string[]>>("TestFunc", (args) => { SELogger.Log("TestFunc called with args: " + string.Join(", ", args)); }));
-            fc.FunctionList.Add(new KeyValuePair<string, Action<string[]>>("Close", (args) => { SELogger.Log("This Window Will Be Closed"); GVariables.MainWindow.Close(); }));
+            fc.FunctionList.Add(new KeyValuePair<string, Action<string[]>>("Close", (args) => { SELogger.Log("This Window Will Be Closed"); GVariables.MainWindows[0].Close(); }));
             SENetLogger.Register(SENLHostType.TCP, SENLTcpMethod.Host, hc, fc);
 
             SELogger.Log("加载游戏");
             gh.LoadGame(new BasicGame());
-            SELogger.Log("设置窗口样式");
-            gh.SetWindowStyle(WindowStyle.GetDefault());
+            //SELogger.Log("设置窗口样式");
+            //gh.SetWindowStyle(WindowStyle.GetDefault());
             SELogger.Log("启动游戏主机");
             gh.Start();
 

@@ -17,28 +17,108 @@ namespace SaturnEngine.SEGraphics
     public enum SEWindowAttribute
     {
         #region 窗体属性
+        /// <summary>
+        /// 获取或设置窗体尺寸，传入输出<see cref="SaturnEngine.SEMath.Vector2D"/>
+        /// </summary>
         Window_Size,
+        /// <summary>
+        /// 获取或设置窗体相对所在monitor的位置，传入输出<see cref="SaturnEngine.SEMath.Vector2D"/>
+        /// </summary>
         Window_Position,
+        /// <summary>
+        /// 获取或设置窗体标题，传入输出<see cref="string"/>
+        /// </summary>
         Window_Title,
+        /// <summary>
+        /// 获取或设置窗体所在的monitor，传入输出<see cref="int"/>
+        /// </summary>
         Window_Monitor,
+        /// <summary>
+        /// 获取或设置窗体是否可以自由拉伸，传入输出<see cref="bool"/>
+        /// </summary>
         Window_Resizable,
+        /// <summary>
+        /// 获取或设置窗体是否全屏，传入输出<see cref="bool"/>
+        /// </summary>
         Window_FullScreen,
+        /// <summary>
+        /// 获取或设置窗体图标，传入输出<see cref="SaturnEngine.Asset.SEImageFile"/>
+        /// </summary>
         Window_Icon,
+        /// <summary>
+        /// 获取或设置窗体鼠标光标，传入输出<see cref="SaturnEngine.Asset.SEImageFile"/>
+        /// </summary>
         Window_Cursor,
-
         #endregion
+        
         #region 渲染属性
+        /// <summary>
+        /// 获取或设置主游戏事件刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_EventRate,
+        /// <summary>
+        /// 获取或设置渲染刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_RenderRate,
+        /// <summary>
+        /// 获取或设置声音管理器刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_AudioRate,
+        /// <summary>
+        /// 获取或设置主线程刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_MainThreadRate,
+        /// <summary>
+        /// 获取或设置主游戏事件失焦时刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_EventRateBackground,
+        /// <summary>
+        /// 获取或设置渲染失焦时刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_RenderRateBackground,
+        /// <summary>
+        /// 获取或设置声音管理器失焦时刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_AudioRateBackground,
+        /// <summary>
+        /// 获取或设置主线程失焦时刷新率，传入输出<see cref="double"/>
+        /// </summary>
         Render_MainThreadRateBackground,
+        /// <summary>
+        /// 获取或设置是否启用hdr，传入输出<see cref="bool"/>
+        /// </summary>
         Render_HDR,
+        /// <summary>
+        /// 获取或设置是否启用Sync，传入输出<see cref="bool"/>
+        /// </summary>
+        Render_Sync,
+        /// <summary>
+        /// 获取或设置渲染图像API，传入输出<see cref="SaturnEngine.Global.GraphicsAPI"/>，此项在<code>SEWindow.CreateWindow();</code>运行后无法更改。
+        /// </summary>
+        Render_API,
+        /// <summary>
+        /// 获取或设置渲染图像类型，传入输出<see cref="SaturnEngine.Global.ProgramTypes"/>，此项在<code>SEWindow.CreateWindow();</code>运行后无法更改。
+        /// </summary>
+        Render_Type,
+        /// <summary>
+        /// 获取或设置渲染图像API最低版本，传入输出<see cref="SaturnEngine.Asset.VERSION"/>，此项在<code>SEWindow.CreateWindow();</code>运行后无法更改。
+        /// </summary>
+        Render_BaseVersion,
+        /// <summary>
+        /// 获取或设置渲染图像API目标版本，传入输出<see cref="SaturnEngine.Asset.VERSION"/>，此项在<code>SEWindow.CreateWindow();</code>运行后无法更改。
+        /// </summary>
+        Render_AimVersion,
         #endregion
 
+        #region 光标属性
+        /// <summary>
+        /// 获取或设置是否显示鼠标指针，传入输出<see cref="bool"/>
+        /// </summary>
+        Cursor_Show
+        
+
+        #endregion
+        
     }
     public abstract class SEWindow : SEBase
     {
@@ -53,7 +133,10 @@ namespace SaturnEngine.SEGraphics
             GVariables.MainWindows.Remove(this);
         }
         public WindowHostType HostType { get; internal set; }
-
+        public GraphicsAPI RenderApi { get; internal set; }
+        public ProgramTypes RenderType { get; internal set; }
+        public VERSION AimApiVersion { get; internal set; }
+        public VERSION BaseApiVersion { get; internal set; }
         public SEThread MainThread { get; internal set; }
         public SEThread UpdateThread { get; internal set; }
         public SEThread RenderThread { get; internal set; }
@@ -75,10 +158,6 @@ namespace SaturnEngine.SEGraphics
         public double AudioRateBackground { get; internal set; } = 60;
         public double RenderRateBackground { get; internal set; } = 60;
         public double MainThreadRateBackground { get; internal set; } = 500;
-        public bool TearingSupport { get; internal set; } = false;
-        public bool UseTearing { get; internal set; } = false;
-        public bool UseHDR { get; internal set; } = false;
-        public bool HDRSupport { get; internal set; } = false;
         public int UseMonitorIndex { get; internal set; } = 0;
         public int TotalMonitorCount { get; internal set; } = 0;
         public Render? Renderer { get; internal set; } = null!; //渲染器
@@ -107,81 +186,14 @@ namespace SaturnEngine.SEGraphics
         /// </summary>
         public bool IsUseVirtualCursor { get { return BasicInput.WH_VTLCUR; } internal set { BasicInput.WH_VTLCUR = value; } }
         /// <summary>
-        /// 设置窗口渲染所在的监视器（全屏状态下）
-        /// </summary>
-        /// <param name="index"></param>
-        public abstract void SetMonitorIndex(int index);
-        /// <summary>
-        /// 设置渲染的帧率
-        /// </summary>
-        /// <param name="rt"></param>
-        public abstract void SetRenderRate(double rt);
-        /// <summary>
         /// 创建窗口，但不会运行它，你可以在调用此函数之前设置窗口的属性，例如大小、标题等。
         /// </summary>
         public abstract void CreateWindow();
-        /// <summary>
-        /// 设置窗口位置
-        /// </summary>
-        /// <param name="pos"></param>
-        public abstract void SetPosition(Vector2D pos);
-        /// <summary>
-        /// 设置窗口大小
-        /// </summary>
-        /// <param name="size"></param>
-        public abstract void SetSize(Vector2D size);
-        /// <summary>
-        /// 是否使用虚拟光标（非SDL或OPENGL实现）
-        /// </summary>
-        /// <param name="us"></param>
-        public abstract void UseVirtualCursorInput(bool us);
-        /// <summary>
-        /// 设置窗口是否可以手动调整大小
-        /// </summary>
-        /// <param name="resizable"></param>
-        public abstract void SetResizable(bool resizable);
-        /// <summary>
-        /// 设置是否全屏显示
-        /// </summary>
-        /// <param name="fullscreen"></param>
-        public abstract void SetFullScreen(bool fullscreen);
-        /// <summary>
-        /// 设置窗口标题
-        /// </summary>
-        /// <param name="title"></param>
-        public abstract void SetTitle(string title);
-        /// <summary>
-        /// 设置窗口图标
-        /// </summary>
-        /// <param name="fp"></param>
-        public abstract void SetICONFromImage(SEImageFile fp);
-        /// <summary>
-        /// 设置鼠标光标
-        /// </summary>
-        /// <param name="fp"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        public abstract void SetCursorFromImage(SEImageFile fp, int x = 0, int y = 0);
         /// <summary>
         /// 是否限制鼠标在窗口内
         /// </summary>
         /// <param name="lockCursor"></param>
         public abstract void LockCursor(bool lockCursor);
-        /// <summary>
-        /// 是否设置鼠标可以无限拖动
-        /// </summary>
-        /// <param name="endlessMove"></param>
-        public abstract void SetCursorEndlessMove(bool endlessMove);
-        /// <summary>
-        /// 是否显示光标
-        /// </summary>
-        /// <param name="showCursor"></param>
-        public abstract void ShowCursor(bool showCursor);
-        /// <summary>
-        /// 是否使用逻辑位移输入
-        /// </summary>
-        /// <param name="useLogicCursor"></param>
-        public abstract void UseLogicCursorInput(bool useLogicCursor);
         /// <summary>
         /// 初始化
         /// </summary>
@@ -189,17 +201,41 @@ namespace SaturnEngine.SEGraphics
         /// <summary>
         /// 关闭窗口并释放资源
         /// </summary>
-        public abstract void Close();
+        public void Close()
+        {
+            OnClose();
+        }
+
+        public abstract void OnClose();
+
+        public abstract void OnStart();
+        
         /// <summary>
         /// 运行窗口，有所更改，此函数不再接管主线程，主线程的工作在OnMainThreadInvoke函数中执行，主线程将负责调用UpdateLoop的Update函数以及执行Delegates队列中的事件
         /// </summary>
-        public abstract void RunWindow();
+        public void RunWindow()
+        {
+            MainThread = Dispatcher.CreateThreadORG(WorkSender, ThreadPriority.BelowNormal);
+            MainThread.Start();
+            OnStart();
+        }
 
+        void WorkSender()
+        {
+            MainThread.SetFPS((int)MainThreadRate);
+            
+            while (GVariables.EngineRunning)
+            {
+                MainThreadQueue.Add(OnUpdate);
+                MainThread.WaitForFPS();
+            }
+        }
+
+        public abstract void OnUpdate();
         public abstract nint GetWindowHandle();
 
         internal abstract void OnMainThreadInvoke();
-
-
+        
         public abstract bool SetAttribute(SEWindowAttribute attribute, object[] value);
         
         public abstract object GetAttribute(SEWindowAttribute attribute);

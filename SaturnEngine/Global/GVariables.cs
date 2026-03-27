@@ -26,10 +26,10 @@ namespace SaturnEngine.Global
         public static string? CpuName;
         public static string? CpuVersion;
         public static CPUType? CpuType;
-        public static GpuVendor? GpuVendor;
-        public static string? GpuID;
-        public static string? GpuName;
-        public static string? GpuVersion;
+        //public static GpuVendor? GpuVendor;
+        //public static string? GpuID;
+        //public static string? GpuName;
+        //public static string? GpuVersion;
         public static OS? OS;
         public static Version? OSVersion;
         public static Platform? Platform;//平台形式
@@ -50,13 +50,13 @@ namespace SaturnEngine.Global
 
         public static InternetMethod? InternetMethod;
         public static bool IPv6;
-        public static Version? GraphicsBaseLevel;
-        public static Version? GraphicsAimLevel;
-        public static GraphicsAPI? GraphicsAPI;
+        //public static Version? GraphicsBaseLevel;
+        //public static Version? GraphicsAimLevel;
+        //public static GraphicsAPI? GraphicsAPI;
         public static GlobalMemory? ShareMemory;
 
         public static GameHost? ThisGameHost;
-        public static Game? ThisGame;
+        //public static Game? ThisGame;
 
         public static ProgramTypes ProgramType;
 
@@ -171,8 +171,9 @@ namespace SaturnEngine.Global
     public enum ProgramTypes : int
     {
         None = 0,
-        p3D = 1,
-        p2D = 2,
+        Game3D = 1,
+        Game2D = 2,
+        OnlyApplicatioon = 3
     }
     public enum CPUType : int//排除老产品
     {
@@ -219,12 +220,11 @@ namespace SaturnEngine.Global
         Vulkan = 1,
         DirectX = 2,
         OpenGL = 3,
-        WGPU = 4,
+        WebGPU = 4,
 
         Metal = 5,
 
         SDL2D = 6,
-        OpenGL2D = 7,
 
         Unknow = 114514
     }
@@ -272,13 +272,13 @@ namespace SaturnEngine.Global
         Unisoc = 4,//紫光
 
         //pc
-        LoongSon = 5,//支不支持不知道，先打上去
+        LoongSon = 5,
         Intel = 6,
         AMD = 7,
 
 
         //both
-        Apple = 8,//有点特殊
+        Apple = 8,
 
 
         OEM = 9,

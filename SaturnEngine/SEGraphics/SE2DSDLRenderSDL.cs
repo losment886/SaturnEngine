@@ -38,7 +38,7 @@ namespace SaturnEngine.SEGraphics
         {
             //nint hWnd = GetActiveWindow();
             SELogger.Log("Creating SDL2D Renderer");
-            var w = GVariables.MainWindow.GetWindowHandle();
+            var w = GVariables.MainWindows[0].GetWindowHandle();
             SELogger.Log("Got window handle");
             if (GVariables.CurrentWindowHostType == WindowHostType.SDL)
             {
@@ -105,7 +105,7 @@ namespace SaturnEngine.SEGraphics
         }
         private void UpdateUIControlPositions(double deltaTime)
         {
-            GVariables.ThisGame.UIScene.Controls.Flush(GVariables.MainWindow.Size);
+            //GVariables.ThisGame.UIScene.Controls.Flush(GVariables.MainWindow.Size);
 
         }
         public override void Initialize()
@@ -151,11 +151,13 @@ namespace SaturnEngine.SEGraphics
 
         public override void RenderFrame(double deltaTime)
         {
+            /*
             if (rui && GVariables.ThisGame.UIScene != null && !ppr)
             {
                 ppr = true;
                 SetUIScene(true);
             }
+            */
             rendering = true;
             if (!framepping)
             {
@@ -211,11 +213,13 @@ namespace SaturnEngine.SEGraphics
 
         public override void SetScene(int index)
         {
+            /*
             var s = GVariables.ThisGame.ThisScenes[index];
             foreach (var v in s.ThisGameObjects)
             {
 
             }
+            */
         }
 
         public override void SetSize(int width, int height)
@@ -261,12 +265,14 @@ namespace SaturnEngine.SEGraphics
         public override void SetUIScene(bool enable)
         {
             //throw new NotImplementedException();
+            /*
             rui = enable;
             if (enable && GVariables.ThisGame.UIScene != null)
             {
                 curui = GVariables.ThisGame.UIScene;
                 LoadUIC();
             }
+            */
         }
 
         public SDLTexturePtr ConvertImageToTexture(SixLabors.ImageSharp.Image<Rgba32> image, SDLRendererPtr renderer)
