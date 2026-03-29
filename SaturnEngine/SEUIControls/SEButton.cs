@@ -22,7 +22,7 @@ namespace SaturnEngine.SEUIControls
         double tcr = 0;
 
         bool enter = false;
-        public override void Update(float deltaTime)
+        public override void Update(double deltaTime)
         {
             var s = Position;
             //鼠标处理

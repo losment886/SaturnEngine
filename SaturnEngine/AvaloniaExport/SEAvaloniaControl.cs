@@ -82,7 +82,7 @@ namespace SaturnEngine.AvaloniaExport
             Console.WriteLine("Exiting Basic Scene");
         }
 
-        public override void Update(float deltaTime)
+        public override void Update(double deltaTime)
         {
             /*
             //Console.WriteLine($"Updating Basic Scene with delta time: {deltaTime}");
@@ -276,6 +276,10 @@ namespace SaturnEngine.AvaloniaExport
     }
     public class BasicGame : Game
     {
+        public BasicGame(string nm = "BasicGame", string desc = "This is a basic game")
+            : base(nm, desc)
+        {
+        }
         public override void Exit()
         {
 
@@ -317,7 +321,7 @@ namespace SaturnEngine.AvaloniaExport
 
         }
 
-        public override void OnUpdate(float deltaTime)
+        public override void OnUpdate(double deltaTime)
         {
 
         }

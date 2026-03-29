@@ -17,7 +17,7 @@ namespace SaturnEngine.Base
         /// 更新循环
         /// </summary>
         /// <param name="deltaTime">上一帧的时间间隔</param>
-        public abstract void Update(float deltaTime);
+        public abstract void Update(double deltaTime);
     }
     public interface IGetWindowStyle
     {

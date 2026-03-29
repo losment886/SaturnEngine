@@ -114,11 +114,15 @@ namespace SaturnEngine.SEGraphics
         /// <summary>
         /// 获取或设置是否显示鼠标指针，传入输出<see cref="bool"/>
         /// </summary>
-        Cursor_Show
+        Cursor_Show,
         
 
         #endregion
         
+        /// <summary>
+        /// 仅供统计
+        /// </summary>
+        Last
     }
     public abstract class SEWindow : SEBase
     {
@@ -126,49 +130,73 @@ namespace SaturnEngine.SEGraphics
         public SEWindow() 
         {
             GVariables.MainWindows.Add(this);
+            for (int i = 0; i < (int)SEWindowAttribute.Last; i++)
+            {
+                Attributes.Add((SEWindowAttribute)i, null!);
+            }
+            // Set default values
+            Attributes[SEWindowAttribute.Window_Title] = "Saturn Engine";
+            Attributes[SEWindowAttribute.Window_Resizable] = true;
+            Attributes[SEWindowAttribute.Window_FullScreen] = false;
+            Attributes[SEWindowAttribute.Render_EventRate] = 1000.0;
+            Attributes[SEWindowAttribute.Render_RenderRate] = 300.0;
+            Attributes[SEWindowAttribute.Render_AudioRate] = 1000.0;
+            Attributes[SEWindowAttribute.Render_MainThreadRate] = 1000.0;
+            Attributes[SEWindowAttribute.Render_EventRateBackground] = 60.0;
+            Attributes[SEWindowAttribute.Render_RenderRateBackground] = 60.0;
+            Attributes[SEWindowAttribute.Render_AudioRateBackground] = 60.0;
+            Attributes[SEWindowAttribute.Render_MainThreadRateBackground] = 500.0;
+            Attributes[SEWindowAttribute.Window_Monitor] = 0;
+            Attributes[SEWindowAttribute.Cursor_Show] = true;
+            Attributes[SEWindowAttribute.Window_Size] = default(Vector2D);
+            Attributes[SEWindowAttribute.Window_Position] = default(Vector2D);
         }
 
         ~SEWindow()
         {
             GVariables.MainWindows.Remove(this);
         }
-        public WindowHostType HostType { get; internal set; }
-        public GraphicsAPI RenderApi { get; internal set; }
-        public ProgramTypes RenderType { get; internal set; }
-        public VERSION AimApiVersion { get; internal set; }
-        public VERSION BaseApiVersion { get; internal set; }
-        public SEThread MainThread { get; internal set; }
-        public SEThread UpdateThread { get; internal set; }
-        public SEThread RenderThread { get; internal set; }
-        public SEThread AudioThread { get; internal set; }
-        public SEThread PhysicsThread { get; internal set; }
-        public SEThread NetworkThread { get; internal set; }
-        public SEThread VideoThread { get; internal set; }
-        public SEThread InputThread { get; internal set; }//if hook?
-        public Vector2D Size { get; internal set; }
-        public Vector2D Position { get; internal set; }
-        public string Title { get; internal set; } = "Saturn Engine";
-        public bool Resizable { get; internal set; } = true;
-        public bool FullScreen { get; internal set; } = false;
-        public double EventRate { get { return _EventRate; } internal set { _EventRate = value; UpdateThread?.SetFPS((int)_EventRate); } }
-        public double RenderRate { get { return _RenderRate; } internal set { _RenderRate = value; RenderThread?.SetFPS((int)_RenderRate); } }
-        public double AudioRate { get { return _AudioRate; } internal set { _AudioRate = value; AudioThread?.SetFPS((int)_AudioRate); } }
-        public double MainThreadRate { get { return _MainThreadRate; } internal set { _MainThreadRate = value; MainThread?.SetFPS((int)_MainThreadRate); } }
-        public double EventRateBackground { get; internal set; } = 60;
-        public double AudioRateBackground { get; internal set; } = 60;
-        public double RenderRateBackground { get; internal set; } = 60;
-        public double MainThreadRateBackground { get; internal set; } = 500;
-        public int UseMonitorIndex { get; internal set; } = 0;
+        public WindowHostType HostType { get; set; }
+        public GraphicsAPI RenderApi { get=>(GraphicsAPI)Attributes[SEWindowAttribute.Render_API]; internal set=>Attributes[SEWindowAttribute.Render_API] = value; }
+        public ProgramTypes RenderType { get => (ProgramTypes)Attributes[SEWindowAttribute.Render_Type]; internal set => Attributes[SEWindowAttribute.Render_Type] = value; }
+        public VERSION AimApiVersion { get => (VERSION)Attributes[SEWindowAttribute.Render_AimVersion]; internal set => Attributes[SEWindowAttribute.Render_AimVersion] = value; }
+        public VERSION BaseApiVersion { get => (VERSION)Attributes[SEWindowAttribute.Render_BaseVersion]; internal set => Attributes[SEWindowAttribute.Render_BaseVersion] = value; }
+        public SEThread? MainThread { get; internal set; }
+        public SEThread? UpdateThread { get; internal set; }
+        public SEThread? RenderThread { get; internal set; }
+        public SEThread? AudioThread { get; internal set; }
+        public SEThread? PhysicsThread { get; internal set; }
+        public SEThread? NetworkThread { get; internal set; }
+        public SEThread? VideoThread { get; internal set; }
+        public SEThread? InputThread { get; internal set; }//if hook?
+        public Vector2D Size { get => (Vector2D)Attributes[SEWindowAttribute.Window_Size]; internal set => Attributes[SEWindowAttribute.Window_Size] = value; }
+        public Vector2D Position { get => (Vector2D)Attributes[SEWindowAttribute.Window_Position]; internal set => Attributes[SEWindowAttribute.Window_Position] = value; }
+        public string Title { get => (string)Attributes[SEWindowAttribute.Window_Title]; internal set => Attributes[SEWindowAttribute.Window_Title] = value; }
+        public bool Resizable { get => (bool)Attributes[SEWindowAttribute.Window_Resizable]; internal set => Attributes[SEWindowAttribute.Window_Resizable] = value; }
+        public bool FullScreen { get => (bool)Attributes[SEWindowAttribute.Window_FullScreen]; internal set => Attributes[SEWindowAttribute.Window_FullScreen] = value; }
+        public double EventRate { get => (double)Attributes[SEWindowAttribute.Render_EventRate]; internal set { Attributes[SEWindowAttribute.Render_EventRate] = value; UpdateThread?.SetFPS((int)value); } }
+        public double RenderRate { get => (double)Attributes[SEWindowAttribute.Render_RenderRate]; internal set { Attributes[SEWindowAttribute.Render_RenderRate] = value; RenderThread?.SetFPS((int)value); } }
+        public double AudioRate { get => (double)Attributes[SEWindowAttribute.Render_AudioRate]; internal set { Attributes[SEWindowAttribute.Render_AudioRate] = value; AudioThread?.SetFPS((int)value); } }
+        public double MainThreadRate { get => (double)Attributes[SEWindowAttribute.Render_MainThreadRate]; internal set { Attributes[SEWindowAttribute.Render_MainThreadRate] = value; MainThread?.SetFPS((int)value); } }
+        public double EventRateBackground { get => (double)Attributes[SEWindowAttribute.Render_EventRateBackground]; internal set => Attributes[SEWindowAttribute.Render_EventRateBackground] = value; }
+        public double AudioRateBackground { get => (double)Attributes[SEWindowAttribute.Render_AudioRateBackground]; internal set => Attributes[SEWindowAttribute.Render_AudioRateBackground] = value; }
+        public double RenderRateBackground { get => (double)Attributes[SEWindowAttribute.Render_RenderRateBackground]; internal set => Attributes[SEWindowAttribute.Render_RenderRateBackground] = value; }
+        public double MainThreadRateBackground { get => (double)Attributes[SEWindowAttribute.Render_MainThreadRateBackground]; internal set => Attributes[SEWindowAttribute.Render_MainThreadRateBackground] = value; }
+        public int UseMonitorIndex { get => (int)Attributes[SEWindowAttribute.Window_Monitor]; internal set => Attributes[SEWindowAttribute.Window_Monitor] = value; }
         public int TotalMonitorCount { get; internal set; } = 0;
         public Render? Renderer { get; internal set; } = null!; //渲染器
         public DelegateQueue Delegates { get; internal set; } = new DelegateQueue("Main Thread DIL");//主队列事件执行
         public DelegateQueue RenderDel { get; internal set; } = new DelegateQueue("Render Thread DIL");//主队列事件执行
         public DelegateQueue AudioDel { get; internal set; } = new DelegateQueue("Audio Thread DIL");//主队列事件执行
         public IUpdateLoop UpdateLoop { get; set; } = null;
+        public Game? OwnerGame { get; internal set; }
+        
+        internal Dictionary<SEWindowAttribute, object> Attributes = new Dictionary<SEWindowAttribute, object>();
+        
         /// <summary>
         /// 光标是否可见
         /// </summary>
-        public bool IsCursorVisible { get; internal set; } = true;
+        public bool IsCursorVisible { get => (bool)Attributes[SEWindowAttribute.Cursor_Show]; internal set => Attributes[SEWindowAttribute.Cursor_Show] = value; }
         /// <summary>
         /// 是否将光标锁定在窗口内，开启后将无法移动光标到窗口外
         /// </summary>
@@ -215,9 +243,11 @@ namespace SaturnEngine.SEGraphics
         /// </summary>
         public void RunWindow()
         {
+            OnStart();
+            UpdateLoop = OwnerGame;
             MainThread = Dispatcher.CreateThreadORG(WorkSender, ThreadPriority.BelowNormal);
             MainThread.Start();
-            OnStart();
+            
         }
 
         void WorkSender()
@@ -226,25 +256,28 @@ namespace SaturnEngine.SEGraphics
             
             while (GVariables.EngineRunning)
             {
-                MainThreadQueue.Add(OnUpdate);
+                MainThreadQueue.Add(Worker);
                 MainThread.WaitForFPS();
             }
         }
 
+        private double lastt = 0;
+        private double currt = 0;
+        void Worker()
+        {
+            currt = GetCurrentTime();
+            UpdateLoop.Update(currt - lastt);
+            lastt = currt;
+            OnUpdate();
+        }
         public abstract void OnUpdate();
         public abstract nint GetWindowHandle();
-
-        internal abstract void OnMainThreadInvoke();
         
-        public abstract bool SetAttribute(SEWindowAttribute attribute, object[] value);
+        public abstract bool SetAttribute(SEWindowAttribute attribute, object value);
         
         public abstract object GetAttribute(SEWindowAttribute attribute);
 
 
-        internal double _EventRate = 1000;
-        internal double _RenderRate = 300;
-        internal double _AudioRate = 1000;
-        internal double _MainThreadRate = 1000;
     }
     
 }

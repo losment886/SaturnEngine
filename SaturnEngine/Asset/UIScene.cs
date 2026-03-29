@@ -8,7 +8,7 @@ namespace SaturnEngine.Asset
         public SEControls Controls = new SEControls();
         public SEUIAssembly UIA;
         public SEUILL UILL;
-        public void Update(float deltaTime)
+        public void Update(double deltaTime)
         {
 
             //throw new NotImplementedException();

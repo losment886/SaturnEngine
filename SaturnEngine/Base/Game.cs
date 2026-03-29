@@ -1,5 +1,6 @@
 ﻿using SaturnEngine.Asset;
 using SaturnEngine.Global;
+using SaturnEngine.SEGraphics;
 
 namespace SaturnEngine.Base
 {
@@ -8,25 +9,26 @@ namespace SaturnEngine.Base
     /// </summary>
     public abstract class Game : SEBase, IUpdateLoop
     {
+        public Game(string nm,string desc)
+        :base(nm,desc)
+        {
+            ThisWindow = new SEWindowSDL();
+            ThisScenes = new List<Scene>();
+            ThisSTCs = new List<ulong>();
+            UIScene = null;
+            ThisWindow.OwnerGame = this;
+        }
         public List<Scene> ThisScenes { get; private set; }
         public List<ulong> ThisSTCs { get; private set; }
         public int CurrentSceneIndex { get; private set; } = -1;
         public UIScene? UIScene { get; set; } = null;//UI场景，有就用，没有就算了
-        public int BindSEWindowID { get; private set; } = -1;
+        public SEWindow ThisWindow { get; private set; }
         /// <summary>
         /// 添加场景
         /// </summary>
         /// <param name="scene"></param>
         public void AddScene(Scene scene)
         {
-            if (ThisScenes == null)
-            {
-                ThisScenes = new List<Scene>();
-            }
-            if (ThisSTCs == null)
-            {
-                ThisSTCs = new List<ulong>();
-            }
 
             ThisScenes.Add(scene);
             ThisSTCs.Add(scene.STC);
@@ -71,7 +73,7 @@ namespace SaturnEngine.Base
             {
                 ThisScenes[CurrentSceneIndex].Activity();
             }
-            GVariables.MainWindows[BindSEWindowID].Renderer?.SetScene(CurrentSceneIndex);
+            ThisWindow?.Renderer?.SetScene(CurrentSceneIndex);
         }
         /// <summary>
         /// 初始化
@@ -89,6 +91,7 @@ namespace SaturnEngine.Base
         /// </summary>
         /// <remarks>
         /// 在程序运行的一开始也会判断是否有焦点，请注意判断逻辑。
+        /// 由于架构更改，可以允许多Game运行，此函数无效
         /// </remarks>
         public abstract void OnFocus();
         /// <summary>
@@ -96,14 +99,16 @@ namespace SaturnEngine.Base
         /// </summary>
         /// <remarks>
         /// 在程序运行的一开始也会判断是否有焦点，请注意判断逻辑。
+        /// 由于架构更改，可以允许多Game运行，此函数无效
         /// </remarks>
         public abstract void OnLeave();
+
         /// <summary>
         /// 主线程更新循环
         /// </summary>
         /// <param name="deltaTime"></param>
-        public abstract void OnUpdate(float deltaTime);
-        public void Update(float deltaTime)
+        public abstract void OnUpdate(double deltaTime);
+        public void Update(double deltaTime)
         {
             OnUpdate(deltaTime);
             if (CurrentSceneIndex >= 0)

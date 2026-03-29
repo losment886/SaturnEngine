@@ -203,7 +203,7 @@ namespace Windows_Test_Project
                 Console.WriteLine("Exiting Basic Scene");
             }
 
-            public override void Update(float deltaTime)
+            public override void Update(double deltaTime)
             {
                 /*
                 //Console.WriteLine($"Updating Basic Scene with delta time: {deltaTime}");
@@ -397,6 +397,11 @@ namespace Windows_Test_Project
         }
         public class BasicGame : Game
         {
+            public BasicGame(string nm = "BasicGame", string desc = "This is a basic game")
+                : base(nm, desc)
+            {
+                
+            }
             public override void Exit()
             {
 
@@ -405,6 +410,14 @@ namespace Windows_Test_Project
             public override void Initialize()
             {
                 Console.WriteLine("NEW GAME!!!");
+                SELogger.Log("加载window设置");
+                ThisWindow.SetAttribute(SEWindowAttribute.Window_Title, "Saturn Engine Test Program");
+                ThisWindow.SetAttribute(SEWindowAttribute.Window_Resizable, true);
+                ThisWindow.SetAttribute(SEWindowAttribute.Render_API, GraphicsAPI.None);
+                ThisWindow.SetAttribute(SEWindowAttribute.Window_Size, new Vector2D(800, 600));
+                ThisWindow.SetAttribute(SEWindowAttribute.Window_Position, new Vector2D(100, 100));
+                ThisWindow.SetAttribute(SEWindowAttribute.Window_FullScreen, false);
+                ThisWindow.HostType = WindowHostType.SDL;
                 AddScene(new BasicScene());
                 LoadScene(STCCode.GetSTC("BasicScene"));
                 UIScene ui = new UIScene();
@@ -438,7 +451,7 @@ namespace Windows_Test_Project
 
             }
 
-            public override void OnUpdate(float deltaTime)
+            public override void OnUpdate(double deltaTime)
             {
 
             }

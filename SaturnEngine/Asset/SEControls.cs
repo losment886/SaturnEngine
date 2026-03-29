@@ -148,7 +148,7 @@ namespace SaturnEngine.Asset
             }
         }*/
 
-        public void Update(float deltaTime)
+        public void Update(double deltaTime)
         {
             for (int i = 0; i < Controls.Count; i++)
             {
@@ -156,7 +156,7 @@ namespace SaturnEngine.Asset
                 UPD(Controls[i], deltaTime);
             }
         }
-        void UPD(SEControl ctrl,float deltaTime)
+        void UPD(SEControl ctrl,double deltaTime)
         {
             ctrl.Update(deltaTime);
             if (ctrl.Child != null)
@@ -243,7 +243,7 @@ namespace SaturnEngine.Asset
         public bool AllowHorizontalLayout;//是否允许子控件水平布局，否则垂直布局，默认false，仅针对子控件，在横向排布时，超出宽度则换行，在纵向排布时，超出高度则换列
         public SERect? Position;//由布局引擎设置，表示相对渲染窗口的绝对位置，左上与右下
         public double Angle;//渲染图元旋转角
-        public abstract void Update(float deltaTime);
+        public abstract void Update(double deltaTime);
         public abstract void OnKeyInputEvent(Keys key,bool enbale);
 
         public delegate void PVoid();

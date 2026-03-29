@@ -36,6 +36,7 @@ namespace SaturnEngine.Performance
         bool hasused = false;
         Stopwatch sw;
         public int FrameRange { get; set; } = 5;
+        public double Currentfps { get; internal set; }
         public void SetFPS(int f)
         {
             fps = f;
@@ -69,6 +70,7 @@ namespace SaturnEngine.Performance
                     if (wsframe >= ppframe)
                     {
                         double fpss = wsframe / ((sw.Elapsed.TotalMilliseconds - lasttim) / 1000);
+                        Currentfps = fpss;
                         wsframe = 0;
                         lasttim = sw.Elapsed.TotalMilliseconds;
                         if (fpss > fps)
@@ -198,6 +200,24 @@ namespace SaturnEngine.Performance
     /// </summary>
     public unsafe class Dispatcher
     {
+        /// <summary>
+        /// 检查给定的线程是否为当前执行的线程。
+        /// </summary>
+        /// <param name="thread">要检查的SEThread实例。</param>
+        /// <returns>如果给定的线程是当前正在执行的线程，则返回true；否则返回false。</returns>
+        public static bool CheckThread(SEThread thread)
+        {
+            return Thread.CurrentThread.ManagedThreadId == thread.TID;
+        }
+
+        /// <summary>
+        /// 检查当前线程是否为主线程。
+        /// </summary>
+        /// <returns>如果当前线程是主线程，则返回true；否则返回false。</returns>
+        public static bool CheckMainThread()
+        {
+            return CheckThread(GVariables.ThisGameHost?.MainThread ?? new SEThread());
+        }
         /// <summary>
         /// 精准延迟，但代价是CPU消耗高，使用Sleep函数自动调度
         /// </summary>
