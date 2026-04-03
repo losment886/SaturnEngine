@@ -148,7 +148,7 @@ namespace SaturnEngine.SEGraphics
             Attributes[SEWindowAttribute.Render_MainThreadRateBackground] = 500.0;
             Attributes[SEWindowAttribute.Window_Monitor] = 0;
             Attributes[SEWindowAttribute.Cursor_Show] = true;
-            Attributes[SEWindowAttribute.Window_Size] = default(Vector2D);
+            Attributes[SEWindowAttribute.Window_Size] = new Vector2D(800, 600);
             Attributes[SEWindowAttribute.Window_Position] = default(Vector2D);
         }
 
@@ -231,7 +231,10 @@ namespace SaturnEngine.SEGraphics
         /// </summary>
         public void Close()
         {
+            rtw = false;
             OnClose();
+            //GVariables.MainWindows.Remove(this);
+            
         }
 
         public abstract void OnClose();
@@ -250,11 +253,12 @@ namespace SaturnEngine.SEGraphics
             
         }
 
+        private bool rtw = true;
         void WorkSender()
         {
             MainThread.SetFPS((int)MainThreadRate);
             
-            while (GVariables.EngineRunning)
+            while (GVariables.EngineRunning&&rtw)
             {
                 MainThreadQueue.Add(Worker);
                 MainThread.WaitForFPS();

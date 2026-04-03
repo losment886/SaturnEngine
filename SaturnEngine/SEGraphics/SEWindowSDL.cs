@@ -9,7 +9,7 @@ namespace SaturnEngine.SEGraphics;
 public unsafe class SEWindowSDL : SEWindow
 {
     public uint SDLFlag = 0;
-    private SDLWindowPtr window;
+    public SDLWindowPtr window;
     public override void CreateWindow()
     {
         window = SDL.CreateWindow(Title, (int)Size.X, (int)Size.Y, 0);
@@ -39,28 +39,39 @@ public unsafe class SEWindowSDL : SEWindow
     {
         SDL.DestroyWindow(window);
         SDL.Quit();
+
     }
     public override void OnStart()
     {
         SDL.ShowWindow(window);
         //TODO: create render
-        
-        
-        
+        //测试版本默认全平台的vulkan1.1
+        Renderer = new SEVulkanRender(this);
+        Renderer.Initialize();
+
+
     }
 
     private SDLEvent e = new SDLEvent();
+    private SDLInitState es =  new SDLInitState();
     public override void OnUpdate()
     {
         while (SDL.PollEvent(ref e))
         {
+            if (e.Type == 0x100)
+            {
+                SELogger.Log("收到退出事件，正在关闭窗口", "SEWindowSDL");
+                Close();
+            }
             //TODO: 可以添加一些判断代码
+            
         }
         
         Delegates.ProcessEvent();
         Delegates.InvokeAll();
         //SDL.SetWindowTitle(window, $"FPS:{MainThread.Currentfps} ||SEObjects Count:{GVariables.SEObjects.Count}");
-        SELogger.Log($"FPS:{MainThread.Currentfps} ||SEObjects Count:{GVariables.SEObjects.Count}", "SEWindowSDL");
+        //SELogger.Log($"FPS:{MainThread.Currentfps} ||SEObjects Count:{GVariables.SEObjects.Count}", "SEWindowSDL");
+
     }
     public override IntPtr GetWindowHandle()
     {

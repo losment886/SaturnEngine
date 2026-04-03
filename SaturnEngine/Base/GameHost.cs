@@ -142,7 +142,7 @@ namespace SaturnEngine.Base
         {
             LaunchGame(Games[0].Name);
             MainThread.SetFPS(10000);
-            while (true) 
+            while (GVariables.EngineRunning) 
             {
                 //包含窗口刷新的队列
                 MainThreadQueue.ProcessEvent();

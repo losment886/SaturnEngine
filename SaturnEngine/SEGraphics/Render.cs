@@ -4,9 +4,11 @@ namespace SaturnEngine.SEGraphics
 {
     public abstract class Render : SEBase
     {
-        public Render(string nm = "Render", string desc = "NULL")
+        internal SEWindow Hoster;
+        public Render(SEWindow Hoster,string nm = "Render", string desc = "NULL")
             : base(nm, desc)
         {
+            this.Hoster = Hoster;
         }
         public enum Feature : int
         {
