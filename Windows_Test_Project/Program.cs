@@ -103,15 +103,17 @@ namespace Windows_Test_Project
             Console.WriteLine($"显示名称: {currentCulture.DisplayName}");
             Console.WriteLine($"英文名称: {currentCulture.EnglishName}");
             Console.WriteLine($"本地名称: {currentCulture.NativeName}");
-
+            string ppc = Console.ReadLine()??"./";
+            SEFile sf = new SEFile(ppc);
             while(true)
             {
-                string v = Console.ReadLine();
+                Console.Write(sf.FullPath + ">");
+                string v = Console.ReadLine()??"./";
                 
                 if(v != "q")
                 {
-
-                    Console.WriteLine(STCCode.GetSTC(Encoding.UTF8.GetBytes(v)));
+                    sf.Seek(v);
+                    
                 }
                 else
                 {

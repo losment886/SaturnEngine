@@ -26,10 +26,6 @@ namespace SaturnEngine.Global
         public static string? CpuName;
         public static string? CpuVersion;
         public static CPUType? CpuType;
-        //public static GpuVendor? GpuVendor;
-        //public static string? GpuID;
-        //public static string? GpuName;
-        //public static string? GpuVersion;
         public static OS? OS;
         public static Version? OSVersion;
         public static Platform? Platform;//平台形式
@@ -45,25 +41,19 @@ namespace SaturnEngine.Global
         public static string? LanguageResPath;//engine语言资源路径
         public static string? UserLanguageResPath;//用户语言资源路径
 
-        //从接下来的大改开始正式使用版本号来标记引擎版本，之前的版本号只是为了测试功能而已
         public static readonly Version EngineVersion = new Version(0, 0, 0, 1);
 
         public static InternetMethod? InternetMethod;
         public static bool IPv6;
-        //public static Version? GraphicsBaseLevel;
-        //public static Version? GraphicsAimLevel;
-        //public static GraphicsAPI? GraphicsAPI;
         public static GlobalMemory? ShareMemory;
 
         public static GameHost? ThisGameHost;
-        //public static Game? ThisGame;
 
         public static ProgramTypes ProgramType;
 
         public static string Developer = "Losment";
         public static string Company = "lofusoft";
         public static string Copyright = "lofusoft © 2025";
-        //public readonly static Version SERVersion = new Version(2, 71, 64, 3);
 
         public static long DefaultBufferSize = 40960000;
 
@@ -73,9 +63,7 @@ namespace SaturnEngine.Global
 
         public static Dictionary<ulong, LRL>? GlobalResources = new Dictionary<ulong, LRL>();
 
-        //public static SEWindow MainWindow;
         public static List<SEWindow> MainWindows = new List<SEWindow>();
-        //public static SEWindowSDL MainWindowSDL;
 
         public static SEAudioManager AudioManager;
 
@@ -92,10 +80,6 @@ namespace SaturnEngine.Global
 
         public static bool AllowConsoleOutput = true;
 
-        //public static bool UsingSDLWindow = false;
-
-        //指示HOST是否使用AvaloniaUI，以便更改渲染方案
-        //public static bool UseAvaloniaUI = false;
 
         public static WindowHostType CurrentWindowHostType = WindowHostType.Glfw;
 
