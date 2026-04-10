@@ -11,14 +11,61 @@ namespace SaturnEngine.Management.SEMemory
         }
         public enum SEBlockSize : long
         {
+            /// <summary>
+            /// 1KB块大小
+            /// </summary>
+            Stream = 1024,//1KB
+            /// <summary>
+            /// 4KB块大小
+            /// </summary>
+            Buffer = 4096,//4KB
+            /// <summary>
+            /// 16KB块大小
+            /// </summary>
+            Cache = 16384,//16KB
+            /// <summary>
+            /// 64KB块大小
+            /// </summary>
+            TempPool = 65536,//64KB
+            /// <summary>
+            /// 128KB块大小
+            /// </summary>
             Special = 131072,//128KB
+            /// <summary>
+            /// 1MB块大小
+            /// </summary>
             Minimum = 1048576,//1MB
+            /// <summary>
+            /// 4MB块大小
+            /// </summary>
             VerySmall = 4194304,//4MB
+            /// <summary>
+            /// 32MB块大小
+            /// </summary>
             Small = 33554432,//32MB
+            /// <summary>
+            /// 128MB块大小
+            /// </summary>
             Normal = 134217728,//128MB
+            /// <summary>
+            /// 256MB块大小
+            /// </summary>
             Large = 268435456,//256MB
+            /// <summary>
+            /// 512MB块大小
+            /// </summary>
             VeryLarge = 536870812,//512MB
-            Maximal = 1073741824,//1024MB
+            /// <summary>
+            /// 1GB块大小
+            /// </summary>
+            Maximal = 1073741824,//1GB
+            /// <summary>
+            /// 2GB块大小
+            /// </summary>
+            Ocean =  2147483648,//2GB
+            /// <summary>
+            /// 仅用于自动设置块大小
+            /// </summary>
             Auto = 1145141919810//仅限于有给定长度的流，会自动确认大小，否则为Minimum，大小不可更改，除非重置
         }
 
@@ -95,62 +142,73 @@ namespace SaturnEngine.Management.SEMemory
             nco = mss.LongLength;
             tplg += c;
         }
+        private static SEBlockSize DetermineBlockSize(long capacity)
+        {
+            // 若容量极小（如小于1MB），直接返回 Minimum 或更小的块，避免过度碎片化
+            if (capacity <= (long)SEBlockSize.Minimum)
+                return SEBlockSize.Minimum;
 
+            // 所有可用的块大小（除 Auto 外），按从小到大排序以便逻辑清晰
+            var allBlockSizes = new[]
+            {
+                SEBlockSize.Stream,
+                SEBlockSize.Buffer,
+                SEBlockSize.Cache,
+                SEBlockSize.TempPool,
+                SEBlockSize.Special,
+                SEBlockSize.Minimum,
+                SEBlockSize.VerySmall,
+                SEBlockSize.Small,
+                SEBlockSize.Normal,
+                SEBlockSize.Large,
+                SEBlockSize.VeryLarge,
+                SEBlockSize.Maximal,
+                SEBlockSize.Ocean
+            };
+
+            // 目标块数范围（可根据实际场景调整）
+            const int targetMinBlocks = 16;
+            const int targetMaxBlocks = 64;
+
+            SEBlockSize best = SEBlockSize.Minimum;
+            long bestBlockCount = long.MaxValue;
+            long bestWaste = long.MaxValue; // 用于当块数均不符合区间时的次要评判指标
+
+            foreach (var blockSize in allBlockSizes)
+            {
+                long blockSizeValue = (long)blockSize;
+                long blockCount = (capacity + blockSizeValue - 1) / blockSizeValue;
+                long waste = blockCount * blockSizeValue - capacity;
+
+                // 优先选择块数在目标区间内的块大小
+                if (blockCount >= targetMinBlocks && blockCount <= targetMaxBlocks)
+                {
+                    // 若已有符合条件的，选择浪费更少的（即块大小更小的）
+                    if (bestBlockCount < targetMinBlocks || bestBlockCount > targetMaxBlocks ||
+                        waste < bestWaste)
+                    {
+                        best = blockSize;
+                        bestBlockCount = blockCount;
+                        bestWaste = waste;
+                    }
+                }
+                // 记录最接近目标区间的（用于无完全符合时）
+                else if (bestBlockCount == long.MaxValue ||
+                         Math.Abs(blockCount - targetMinBlocks) < Math.Abs(bestBlockCount - targetMinBlocks))
+                {
+                    best = blockSize;
+                    bestBlockCount = blockCount;
+                    bestWaste = waste;
+                }
+            }
+
+            return best;
+        }
         public SEMemoryStream(long Capacity, SEMemoryStreamMode LRSM = SEMemoryStreamMode.Fixed, SEBlockSize LRBS = SEBlockSize.Auto)
         {
             if (LRBS == SEBlockSize.Auto)
             {
-                long MinCo = Capacity / ((long)SEBlockSize.Minimum);
-                long MinLst = Capacity % ((long)SEBlockSize.Minimum);
-                long VsmCo = Capacity / ((long)SEBlockSize.VerySmall);
-                long VsmLst = Capacity % ((long)SEBlockSize.VerySmall);
-                long SmaCo = Capacity / ((long)SEBlockSize.Small);
-                long SMaLst = Capacity % ((long)SEBlockSize.Small);
-                long NorCo = Capacity / ((long)SEBlockSize.Normal);
-                long NorLst = Capacity % ((long)SEBlockSize.Normal);
-                long LarCo = Capacity / ((long)SEBlockSize.Large);
-                long LarLst = Capacity % ((long)SEBlockSize.Large);
-                long VlaCo = Capacity / ((long)SEBlockSize.VeryLarge);
-                long VlaLst = Capacity % ((long)SEBlockSize.VeryLarge);
-                long MaxCo = Capacity / ((long)SEBlockSize.Maximal);
-                long MaxLst = Capacity % ((long)SEBlockSize.Maximal);
-                //co30% lst70%
-                long scoreMin = MinCo * 30 + MinLst * 70;
-                long scoreVsm = VsmCo * 30 + VsmLst * 70;
-                long scoreSma = SmaCo * 30 + SMaLst * 70;
-                long scoreNor = NorCo * 30 + NorLst * 70;
-                long scoreLar = LarCo * 30 + LarLst * 70;
-                long scoreVla = VlaCo * 30 + VlaLst * 70;
-                long scoreMax = MaxCo * 30 + MaxLst * 70;
-                long min = Math.Min(scoreMin, Math.Min(scoreVsm, Math.Min(scoreSma, Math.Min(scoreNor, Math.Min(scoreLar, Math.Min(scoreVla, scoreMax))))));
-                if (min == scoreMin)
-                {
-                    LRBS = SEBlockSize.Minimum;
-                }
-                else if (min == scoreVsm)
-                {
-                    LRBS = SEBlockSize.VerySmall;
-                }
-                else if (min == scoreSma)
-                {
-                    LRBS = SEBlockSize.Small;
-                }
-                else if (min == scoreNor)
-                {
-                    LRBS = SEBlockSize.Normal;
-                }
-                else if (min == scoreLar)
-                {
-                    LRBS = SEBlockSize.Large;
-                }
-                else if (min == scoreVla)
-                {
-                    LRBS = SEBlockSize.VeryLarge;
-                }
-                else if (min == scoreMax)
-                {
-                    LRBS = SEBlockSize.Maximal;
-                }
+                LRBS = DetermineBlockSize(Capacity);
             }
             this.LRSM = LRSM;
             lcv = LRSM == SEMemoryStreamMode.Fixed;

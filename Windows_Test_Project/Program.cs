@@ -1,5 +1,6 @@
 ﻿//#define SaturnEngine_Release
 
+using System.Diagnostics;
 using SaturnEngine.Asset;
 using SaturnEngine.Base;
 using SaturnEngine.Global;
@@ -21,6 +22,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using SaturnEngine.Management.SEMemory;
+
 namespace Windows_Test_Project
 {
     internal class Program
@@ -146,7 +149,30 @@ namespace Windows_Test_Project
 
             SELogger.Log("测试完成");
             SELogger.Input();
-
+            SELogger.Log("测试SE内存流性能");
+            byte[] bcache = new  byte[4194304];//4mb块，
+            Random.Shared.NextBytes(bcache);
+            SEMemoryStream sms = new SEMemoryStream();
+            MemoryStream ms = new MemoryStream(bcache.Length * 256);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < 256; i++)//1gb
+            {
+                ms.Write(bcache, 0, bcache.Length);
+            }
+            sw.Stop();
+            SELogger.Log($"MemoryStream写入1GB数据耗时: {sw.ElapsedMilliseconds}ms");
+            ms.Close();
+            SELogger.Input();
+            sw.Restart();
+            for (int i = 0; i < 256; i++)//1gb
+            {
+                sms.Write(bcache, 0, bcache.Length);
+            }
+            sw.Stop();
+            SELogger.Log($"SEMemoryStream写入1GB数据耗时: {sw.ElapsedMilliseconds}ms");
+            sms.Close();
+            SELogger.Input();
 
 
             //Console.WriteLine();
@@ -178,7 +204,9 @@ namespace Windows_Test_Project
             //gh.SetWindowStyle(WindowStyle.GetDefault());
             SELogger.Log("启动游戏主机");
             gh.Start();
-
+            
+            gh.LoadGame(new BasicGame("Basic Game 2"));
+            gh.LaunchGame("Basic Game 2");//测试单实例多窗口
         }
 
         public class BasicScene : Scene
