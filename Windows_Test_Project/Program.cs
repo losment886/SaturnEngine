@@ -153,7 +153,7 @@ namespace Windows_Test_Project
             byte[] bcache = new  byte[4194304];//4mb块，
             Random.Shared.NextBytes(bcache);
             SEMemoryStream sms = new SEMemoryStream();
-            MemoryStream ms = new MemoryStream(bcache.Length * 256);
+            MemoryStream ms = new MemoryStream();
             Stopwatch sw = new Stopwatch();
             sw.Start();
             for (int i = 0; i < 256; i++)//1gb
@@ -162,15 +162,17 @@ namespace Windows_Test_Project
             }
             sw.Stop();
             SELogger.Log($"MemoryStream写入1GB数据耗时: {sw.ElapsedMilliseconds}ms");
+            ms.Dispose();
             ms.Close();
             SELogger.Input();
             sw.Restart();
-            for (int i = 0; i < 256; i++)//1gb
+            for (int i = 0; i < 2048; i++)//1gb
             {
                 sms.Write(bcache, 0, bcache.Length);
             }
             sw.Stop();
             SELogger.Log($"SEMemoryStream写入1GB数据耗时: {sw.ElapsedMilliseconds}ms");
+            sms.Dispose();
             sms.Close();
             SELogger.Input();
 
