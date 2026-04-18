@@ -106,74 +106,7 @@ namespace Windows_Test_Project
             Console.WriteLine($"显示名称: {currentCulture.DisplayName}");
             Console.WriteLine($"英文名称: {currentCulture.EnglishName}");
             Console.WriteLine($"本地名称: {currentCulture.NativeName}");
-            string ppc = Console.ReadLine()??"./";
-            SEFile sf = new SEFile(ppc);
-            while(true)
-            {
-                Console.Write(sf.FullPath + ">");
-                string v = Console.ReadLine()??"./";
-                
-                if(v != "q")
-                {
-                    sf.Seek(v);
-                    
-                }
-                else
-                {
-                    break;
-                }
-            }
             
-            SELogger.Log("测试STCCode");
-            byte[] val =
-            [
-                1, 2, 33, 2, 99, 9, 3, 45, 77, 59, 4, 95, 113, 106, 2, 66, 98, 222, 210, 192, 0, 33, 7, 254, 253, 44,
-                78, 9, 13 ,200
-            ];
-            for (int i = 1; i <= 5; i++)
-            {
-                SELogger.Log(STCCode.GetSTC(val, i - 1, (uint)i * 6).ToString());
-            }
-            SELogger.Input();
-            SELogger.Log("测试SELz4");
-
-            string vl = "helloworldhellohhhhhwdsadalkjasldjajjjjjjjjjdasdkskdsdskjksdalskdjalskdjalskjdajjdkjkjsdkjskdjskjdkjdkjdksdsjdjkjsdskjdsdksjdskdsdjjjdjdjdjdjdjdjdjdjdj";
-            Console.WriteLine( vl );
-            byte[] b = Encoding.UTF8.GetBytes( vl );
-            byte[] c = SECompressStream.CmBt(b, 0, b.Length,6);
-            Console.WriteLine($"b size :{b.Length}  c size :{c.Length}");
-            byte[] d = SECompressStream.DCmBt(c);
-            string vr = Encoding.UTF8.GetString(d);
-            Console.WriteLine(vr);
-
-
-            SELogger.Log("测试完成");
-            SELogger.Input();
-            SELogger.Log("测试SE内存流性能");
-            byte[] bcache = new  byte[4194304];//4mb块，
-            Random.Shared.NextBytes(bcache);
-            SEMemoryStream sms = new SEMemoryStream();
-            MemoryStream ms = new MemoryStream(bcache.Length * 256);
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            for (int i = 0; i < 256; i++)//1gb
-            {
-                ms.Write(bcache, 0, bcache.Length);
-            }
-            sw.Stop();
-            SELogger.Log($"MemoryStream写入1GB数据耗时: {sw.ElapsedMilliseconds}ms");
-            ms.Close();
-            SELogger.Input();
-            sw.Restart();
-            for (int i = 0; i < 256; i++)//1gb
-            {
-                sms.Write(bcache, 0, bcache.Length);
-            }
-            sw.Stop();
-            SELogger.Log($"SEMemoryStream写入1GB数据耗时: {sw.ElapsedMilliseconds}ms");
-            sms.Close();
-            SELogger.Input();
-
 
             //Console.WriteLine();
             SELogger.Log("启动错误监视程序");

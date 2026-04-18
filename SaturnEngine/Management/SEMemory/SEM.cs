@@ -1,4 +1,5 @@
-﻿using SaturnEngine.Asset;
+﻿using System.Collections;
+using SaturnEngine.Asset;
 using SaturnEngine.Base;
 using SaturnEngine.Security;
 using System.IO.MemoryMappedFiles;
@@ -6,6 +7,168 @@ using System.Runtime.InteropServices;
 
 namespace SaturnEngine.Management.SEMemory
 {
+    public unsafe class SEStaticPtr<T> : IEnumerable<T>, IEnumerator<T> 
+        
+    {
+        public T* Handle;
+        public int Length;
+        public T First {get => Handle[0]; set => Handle[0] = value; }
+        private object? _current;
+        private T _current1;
+        //public static implicit operator SEStaticPtr<T>(T other) => new SEStaticPtr<T>(other);
+        //public static implicit operator T*(SEStaticPtr<T> @this) => @this.Handle;
+        //public static explicit operator T(SEStaticPtr<T> @this) => @this.Handle[0];
+        //public static explicit operator T*(SEStaticPtr<T> @this) => @this.Handle;
+        public T this[int i]
+        {
+            get
+            {
+                if (i >= Length)
+                    throw new IndexOutOfRangeException();
+                return Handle[i];
+            }
+            set
+            {
+                if (i >= Length)
+                    throw new IndexOutOfRangeException();
+                Handle[i] = value;
+            }
+        }
+        public unsafe SEStaticPtr()
+        {
+            int s = sizeof(T);
+            Handle = (T*)Marshal.AllocHGlobal(s).ToPointer();
+            Length = 1;
+        }
+        public unsafe SEStaticPtr(in T t)
+        {
+            
+            fixed (T* pc = &t)
+            {
+                int s = sizeof(T);
+                Handle = (T*)Marshal.AllocHGlobal(s).ToPointer();
+                byte* pp = (byte*)pc;
+                byte* pd = (byte*)Handle;
+                for (int i = 0; i < s; i++)
+                {
+                    pd[i] = pp[i];
+                }
+
+                Length = 1;
+            }
+        }
+        public unsafe SEStaticPtr(in T[] t)
+        {
+            fixed (T[]* p = &t)
+            {
+                int s = sizeof(T) * t.Length;
+                Handle = (T*)Marshal.AllocHGlobal(s).ToPointer();
+                byte* pp = (byte*)&p;
+                byte* pd = (byte*)Handle;
+                for (int i = 0; i < s; i++)
+                {
+                    pd[i] = pp[i];
+                }
+
+                Length = t.Length;
+            }
+        }
+        public unsafe SEStaticPtr(int size)
+        {
+            int s = sizeof(T) * size;
+            Handle = (T*)Marshal.AllocHGlobal(s).ToPointer();
+            Length = size;
+        }
+
+        public void Resize(int size)
+        {
+            if (size == Length)
+                return;
+            if (size > Length)
+            {
+                //保留原内容
+                int s = sizeof(T) * Length;
+                
+                byte* pp = (byte*)Handle;
+                byte* pd = (byte*)Marshal.AllocHGlobal(s).ToPointer();;
+                for (int i = 0; i < s; i++)
+                {
+                    pd[i] = pp[i];
+                }
+
+                Length = size;
+                Marshal.FreeHGlobal(new nint(Handle));
+                Handle = (T*)pd;
+            }
+            else
+            {
+                int s = sizeof(T) * size;
+                
+                byte* pp = (byte*)Handle;
+                byte* pd = (byte*)Marshal.AllocHGlobal(s).ToPointer();;
+                for (int i = 0; i < s; i++)
+                {
+                    pd[i] = pp[i];
+                }
+
+                Length = size;
+                Marshal.FreeHGlobal(new nint(Handle));
+                Handle = (T*)pd;
+            }
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return this;
+        }
+
+        ~SEStaticPtr()
+        {
+            if(Handle != null && Handle != (T*)0x00)
+            {
+                Marshal.FreeHGlobal(new nint(Handle));
+            }
+        }
+
+        public void Dispose()
+        {
+            if(Handle != null && Handle != (T*)0x00)
+            {
+                Marshal.FreeHGlobal(new nint(Handle));
+                Handle = (T*)0x00;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        private int index = 0;
+        public bool MoveNext()
+        {
+            if (index + 1 >= Length)
+            {
+                return false;
+            }
+            else
+            {
+                index++;
+                _current = Handle[index];
+                _current1 = Handle[index];
+                return true;
+            }
+        }
+
+        public void Reset()
+        {
+            index = -1;
+        }
+
+        T IEnumerator<T>.Current => _current1;
+
+        object? IEnumerator.Current => _current;
+    }
     /// <summary>
     /// 公用长久的内存分配器
     /// </summary>
