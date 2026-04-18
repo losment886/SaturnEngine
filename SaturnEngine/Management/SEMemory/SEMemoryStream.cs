@@ -54,7 +54,7 @@ namespace SaturnEngine.Management.SEMemory
             /// <summary>
             /// 512MB块大小
             /// </summary>
-            VeryLarge = 536870812,//512MB
+            VeryLarge = 536870912,//512MB
             /// <summary>
             /// 1GB块大小
             /// </summary>

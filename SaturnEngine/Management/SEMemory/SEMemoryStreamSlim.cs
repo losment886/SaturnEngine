@@ -39,7 +39,7 @@ namespace SaturnEngine.Management.SEMemory
         }
         public SEMemoryStreamSlim(long leng)
         {
-            MemoryStream ms = new MemoryStream(new byte[leng]);
+            MemoryStream ms = new MemoryStream((int)leng);
             bs = ms;
         }
         public void Cache(bool enable)
@@ -64,7 +64,7 @@ namespace SaturnEngine.Management.SEMemory
                 if (CacheMode)
                 {
                     //储存转内存
-                    MemoryStream s = new MemoryStream(new byte[bs.Length]);
+                    MemoryStream s = new MemoryStream((int)bs.Length);
                     bs.Seek(0, SeekOrigin.Begin);
                     bs.CopyTo(s);
                     bs.Close();
