@@ -4,6 +4,7 @@ using SaturnEngine.Base;
 using SaturnEngine.Security;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
+using SaturnEngine.Global;
 
 namespace SaturnEngine.Management.SEMemory
 {
@@ -12,7 +13,7 @@ namespace SaturnEngine.Management.SEMemory
     {
         public T* Handle;
         public int Length;
-        public T First {get => Handle[0]; set => Handle[0] = value; }
+        public T First {get => *Handle; set => *Handle = value; }
         private object? _current;
         private T _current1;
         //public static implicit operator SEStaticPtr<T>(T other) => new SEStaticPtr<T>(other);
@@ -172,7 +173,7 @@ namespace SaturnEngine.Management.SEMemory
     /// <summary>
     /// 公用长久的内存分配器
     /// </summary>
-    public class GlobalMemory : SEBase, IDisposable
+    public class GlobalMemory : SEBase, IDisposable, IUpdateLoop
     {
         [Obsolete("Please use SEMemoryStream", true)]
         public unsafe class SEMemoryBlock<T>
@@ -624,12 +625,89 @@ namespace SaturnEngine.Management.SEMemory
         //Dictionary<ulong, SEMemoryBlock<dynamic>> blocks;
         List<SEMemoryStream> blocks;
         List<ulong> stcs;
+        List<KeyValuePair<UUID, nint>> ptrs;
         public ulong TotalUsed = 0;
         public GlobalMemory()
         {
             //blocks = new Dictionary<ulong, SEMemoryBlock<dynamic>>(0);
             blocks = new List<SEMemoryStream>(0);
             stcs = new List<ulong>(0);
+            ptrs = new List<KeyValuePair<UUID, nint>>(0);
+            
+            GVariables.UpdateLoop.Add(this);
+        }
+        public unsafe UUID AllocateGlobalFromStringAnsi(string v)
+        {
+            UUID uid = new UUID();
+            nint pt = Marshal.StringToHGlobalAnsi(v);
+            ptrs.Add(new KeyValuePair<UUID, nint>(uid, pt));
+            return uid;
+        }
+        public unsafe UUID AllocateGlobalFromStringUni(string v)
+        {
+            UUID uid = new UUID();
+            nint pt = Marshal.StringToHGlobalUni(v);
+            ptrs.Add(new KeyValuePair<UUID, nint>(uid, pt));
+            return uid;
+        }
+        public unsafe UUID AllocateGlobalFromStringAuto(string v)
+        {
+            UUID uid = new UUID();
+            nint pt = Marshal.StringToHGlobalAuto(v);
+            ptrs.Add(new KeyValuePair<UUID, nint>(uid, pt));
+            return uid;
+        }
+        public unsafe UUID AllocateGlobalSingle<T>(T? initvalue = null) where T : unmanaged
+        { 
+            UUID uid = new UUID();
+            int sz = sizeof(T);
+            nint pt = Marshal.AllocHGlobal(sz);
+            if(initvalue != null)
+            {
+                //Marshal.StructureToPtr(initvalue, pt, false);
+                byte* p = (byte*)&initvalue;
+                byte* p2 = (byte*)pt.ToPointer();
+                for (int i = 0; i < sz; i++) 
+                {
+                    p2[i] = p[i];
+                }
+            }
+            return uid;
+        }
+        public unsafe UUID AllocateGlobalArray<T>(T[] initvalue) where T : unmanaged
+        {
+            UUID uid = new UUID();
+            int sz = sizeof(T) * initvalue.Length;
+            nint pt = Marshal.AllocHGlobal(sz);
+            if (initvalue != null)
+            {
+                //Marshal.StructureToPtr(initvalue, pt, false);
+                
+                byte* p = (byte*)&initvalue;
+                byte* p2 = (byte*)pt.ToPointer();
+                for (int i = 0; i < sz; i++)
+                {
+                    p2[i] = p[i];
+                }
+            }
+            return uid;
+        }
+        public void FreeGlobal(UUID uid)
+        {
+            for (int i = 0; i < ptrs.Count; i++)
+            {
+                if (ptrs[i].Key == uid)
+                {
+                    Marshal.FreeHGlobal(ptrs[i].Value);
+                    ptrs.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+        List<KeyValuePair<UUID, double>> autoDeleteList = new List<KeyValuePair<UUID, double>>();
+        public void AutoDeleteGlobal(UUID uid, double delayInSeconds)
+        {
+            autoDeleteList.Add(new KeyValuePair<UUID, double>(uid, delayInSeconds + GetCurrentTime()));
         }
         public void FreeMemory(ulong nmstc)
         {
@@ -680,6 +758,20 @@ namespace SaturnEngine.Management.SEMemory
             for (int i = 0; i < blocks.Count; i++)
             {
                 blocks[i].Dispose();
+            }
+        }
+
+        public void Update(double deltaTime)
+        {
+            for (int i = 0; i < autoDeleteList.Count; i++)
+            {
+                var item = autoDeleteList[i];
+                if (item.Value <= GetCurrentTime())
+                {
+                    FreeGlobal(item.Key);
+                    autoDeleteList.RemoveAt(i);
+                    i--;
+                }
             }
         }
     }

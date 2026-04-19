@@ -73,6 +73,8 @@ namespace SaturnEngine.Global
 
         public static event Action? OnEngineClose;
 
+        public static List<IUpdateLoop> UpdateLoop = new List<IUpdateLoop>();
+
         public const ulong DefaultEngineResources = 708566205041628488;
         //2025711Pass
         //5889585001912179270

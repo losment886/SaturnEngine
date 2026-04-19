@@ -142,8 +142,13 @@ namespace SaturnEngine.Base
         {
             LaunchGame(Games[0].Name);
             MainThread.SetFPS(10000);
+            double lasttime = 0;
+            double currenttime = 0;
             while (GVariables.EngineRunning) 
             {
+                currenttime = GetCurrentTime();
+                GVariables.UpdateLoop.All((id) => { id.Update(currenttime - lasttime); return true; });
+                lasttime = currenttime;
                 //包含窗口刷新的队列
                 MainThreadQueue.ProcessEvent();
                 MainThreadQueue.InvokeAll();

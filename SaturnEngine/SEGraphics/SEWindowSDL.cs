@@ -4,6 +4,7 @@ using SaturnEngine.SEMath;
 using Silk.NET.SDL;
 using SaturnEngine.Global;
 using SaturnEngine.Management;
+using Hexa.NET.SDL3;
 
 namespace SaturnEngine.SEGraphics;
 
@@ -14,7 +15,8 @@ public unsafe class SEWindowSDL : SEWindow
     public Sdl SDL;
     public override void CreateWindow()
     {
-        window = SDL.CreateWindow(Title,0,0, (int)Size.X, (int)Size.Y, 0);
+        SDL.VulkanLoadLibrary((byte*)null);
+        window = SDL.CreateWindow(Title, 0, 0, (int)Size.X, (int)Size.Y, (uint)SDLWindowFlags.Vulkan);
         SDL.SetWindowResizable(window, SdlBool.True);
         SDL.SetWindowPosition(window, (int)Position.X, (int)Position.Y);
         

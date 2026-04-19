@@ -22,11 +22,11 @@ namespace SaturnEngine.SEGraphics
 
 
         public SEVulkanRender(SEWindow h)
-        :base(h,"VulkanRender","Vulkan渲染器")
+        : base(h, "VulkanRender", "Vulkan渲染器")
         {
             v = Vk.GetApi();
             Hoster = h;
-            
+
             // Initialize all internal variables
             khrSurface = new SEStaticPtr<KhrSurface>();
             khrSwapchain = new SEStaticPtr<KhrSwapchain>();
@@ -60,63 +60,66 @@ namespace SaturnEngine.SEGraphics
             descriptorSets = new SEStaticPtr<DescriptorSet>(new DescriptorSet[MAX_FRAMES_IN_FLIGHT]);
             vertShaderModule = new SEStaticPtr<ShaderModule>();
             fragShaderModule = new SEStaticPtr<ShaderModule>();
-            
-            // Enable required extensions
-            string surfaceExtension;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                surfaceExtension = KhrWin32Surface.ExtensionName;
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                surfaceExtension = KhrXlibSurface.ExtensionName; // 或 KhrWaylandSurface.ExtensionName
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                surfaceExtension = "VK_EXT_metal_surface";
-            else
+
+            // Query required Vulkan instance extensions via SDL.
+            byte** extname = null;
+            uint cou = 0;
+            var sdl = Sdl.GetApi();
+
+            // First call with pNames = null to get required count
+            if (sdl.VulkanGetInstanceExtensions((Window*)Hoster.GetWindowHandle().ToPointer(), ref cou, (byte**)null) == SdlBool.True && cou > 0)
             {
-                surfaceExtension = KhrWaylandSurface.ExtensionName;
+                // Allocate native array for pointers (byte*)
+                IntPtr namesPtr = Marshal.AllocHGlobal((int)cou * IntPtr.Size);
+                extname = (byte**)namesPtr.ToPointer();
+
+                if (sdl.VulkanGetInstanceExtensions((Window*)Hoster.GetWindowHandle().ToPointer(), ref cou, extname) != SdlBool.True)
+                {
+                    SELogger.Error("Failed to retrieve Vulkan instance extension names from SDL", "SEVulkanRender");
+                    Marshal.FreeHGlobal(namesPtr);
+                    extname = null;
+                    cou = 0;
+                }
             }
-            SELogger.Log("current surfacekhr:" + surfaceExtension, "SEVulkanRender");
-            string[] extensions = new string[]
-            {
-                KhrSurface.ExtensionName,
-                surfaceExtension
-                
-                
-            };
-            char*[] pt = new char*[extensions.Length];
-            for (int i = 0; i < extensions.Length; i++)
-            {
-                pt[i] = (char*)Marshal.StringToHGlobalAnsi(extensions[i]).ToPointer();
-            }
+            SELogger.Log($"SDL reports {cou} required Vulkan instance extensions", "SEVulkanRender");
             //byte[] b = [..extensions.SelectMany(s => Encoding.ASCII.GetBytes(s + "\0")).ToArray()];
             ApplicationInfo ai = new ApplicationInfo()
             {
-                ApiVersion =  new Version32(1, 3, 0),
+                ApiVersion = new Version32(1, 3, 0),
                 ApplicationVersion = new Version32(0, 1, 0),
                 EngineVersion = new Version32(0, 1, 0),
                 PApplicationName = (byte*)Marshal.StringToHGlobalAnsi(GVariables.ProgramName).ToPointer(),
                 PEngineName = (byte*)Marshal.StringToHGlobalAnsi("SaturnEngine").ToPointer(),
                 SType = StructureType.ApplicationInfo,
             };
-            
+
             InstanceCreateInfo ici = new InstanceCreateInfo()
             {
                 PApplicationInfo = &ai,
                 Flags = InstanceCreateFlags.None,
                 SType = StructureType.InstanceCreateInfo,
-                EnabledExtensionCount = (uint)pt.Length,
-                PpEnabledExtensionNames = (byte**)&pt,
+                EnabledExtensionCount = cou,
+                PpEnabledExtensionNames = extname,
                 PNext = null,
                 EnabledLayerCount = 0,
                 PpEnabledLayerNames = null
             };
             Instance ins = new Instance();
-            if (v.CreateInstance(ici, null, &ins) == Result.Success)
+            Result r;
+            if ((r = v.CreateInstance(ref ici, null, &ins)) == Result.Success)
             {
                 instance = ins;
                 GetDeviceNames().ToList().ForEach(x => SELogger.Log($"检测到Vulkan设备: {x}", "SEVulkanRender"));
             }
             else
             {
-                SELogger.Error("无法创建Vulkan实例".GetInCurrLang(), "SEVulkanRender");
+                SELogger.Error($"无法创建Vulkan实例 : {Marshal.GetLastSystemError()} : {Marshal.GetLastPInvokeErrorMessage()} : {r.ToString()}".GetInCurrLang(), "SEVulkanRender");
+            }
+
+            // Free the temporary array of pointers (strings returned by SDL are owned by SDL; only the pointer array was allocated)
+            if (extname != null)
+            {
+                Marshal.FreeHGlobal((IntPtr)extname);
             }
         }
         Instance instance;
@@ -167,7 +170,7 @@ namespace SaturnEngine.SEGraphics
 
         public unsafe override bool CreateDevice(int index = 0)
         {
-            var windowSDL = (Hoster as SEWindowSDL).window;
+            //var windowSDL = (Hoster as SEWindowSDL).window;
             PhysicalDevice pd = v.GetPhysicalDevices(instance).ElementAt(index);
             float[] f = new float[]{0.0f};
             uint qfc = 0;
@@ -299,14 +302,15 @@ namespace SaturnEngine.SEGraphics
 
             // Create surface using SDL
             SurfaceKHR surf;
-            if (Sdl.GetApi().VulkanCreateSurface(windowSDL.window, instance.ToHandle(),null) == SdlBool.True)
+            VkNonDispatchableHandle vndh = new VkNonDispatchableHandle();
+            if (Sdl.GetApi().VulkanCreateSurface(windowSDL.window, instance.ToHandle(), &vndh) == SdlBool.True)
             {
-                surface = new SEStaticPtr<SurfaceKHR>(new SurfaceKHR((ulong)Sdl.GetApi().GetWindowSurface(windowSDL.window)));
+                surface = new SEStaticPtr<SurfaceKHR>(new SurfaceKHR(vndh.Handle));//Sdl.GetApi().GetWindowSurface(windowSDL.window)
                 SELogger.Log("Vulkan surface created successfully", "SEVulkanRender");
             }
             else
             {
-                SELogger.Error("Failed to create Vulkan surface", "SEVulkanRender");
+                SELogger.Error($"Failed to create Vulkan surface : SDL: {Marshal.PtrToStringUTF8(new nint(Sdl.GetApi().GetError()))} : ", "SEVulkanRender");
             }
         }
 
@@ -348,7 +352,7 @@ namespace SaturnEngine.SEGraphics
                     graphicsFamily = i;
                 }
                 Bool32 presentSupport = false;
-                khrSurface.First.GetPhysicalDeviceSurfaceSupport(device
+                khrSurface.Handle->GetPhysicalDeviceSurfaceSupport(device
                     , i, surface.First, &presentSupport);
                 if (presentSupport)
                 {
@@ -402,8 +406,9 @@ namespace SaturnEngine.SEGraphics
             }
 
             PhysicalDeviceFeatures deviceFeatures = new PhysicalDeviceFeatures();
-            char* deviceExtensions = stackalloc char[KhrSwapchain.ExtensionName.ToCharArray().Length];
-            Marshal.Copy(KhrSwapchain.ExtensionName.ToCharArray(), 0, (IntPtr)deviceExtensions, KhrSwapchain.ExtensionName.Length);
+            //char* deviceExtensions = stackalloc char[KhrSwapchain.ExtensionName.ToCharArray().Length];
+            //Marshal.Copy(KhrSwapchain.ExtensionName.ToCharArray(), 0, (IntPtr)deviceExtensions, KhrSwapchain.ExtensionName.Length);
+            byte* de = (byte*)Marshal.StringToHGlobalAnsi(KhrSwapchain.ExtensionName).ToPointer();
 
             fixed (DeviceQueueCreateInfo* queueCreateInfosPtr = queueCreateInfos)
             {
@@ -414,12 +419,13 @@ namespace SaturnEngine.SEGraphics
                     QueueCreateInfoCount = (uint)queueCreateInfos.Length,
                     PEnabledFeatures = &deviceFeatures,
                     EnabledExtensionCount = (uint)1,
-                    PpEnabledExtensionNames = (byte**)&deviceExtensions
+                    PpEnabledExtensionNames = &de
                 };
-
-                if (v.CreateDevice(physicalDevice.First, &createInfo, null, out *device.Handle) != Result.Success)
+                Result r;
+                if ((r = v.CreateDevice(physicalDevice.First, &createInfo, null, out *device.Handle)) != Result.Success)
                 {
-                    SELogger.Error("Failed to create logical device", "SEVulkanRender");
+                    SELogger.Error($"Failed to create logical device: {r}", "SEVulkanRender");
+
                 }
             }
 
@@ -857,10 +863,12 @@ namespace SaturnEngine.SEGraphics
                 BasePipelineHandle = default,
                 BasePipelineIndex = -1
             };
-
-            if (v.CreateGraphicsPipelines(device.First, default, 1, &pipelineInfo, null, out *graphicsPipeline.Handle) != Result.Success)
+            PipelineCache ppc = new PipelineCache();
+            
+            Result r;
+            if ((r = v.CreateGraphicsPipelines(device.First, ppc, 1, &pipelineInfo, null, graphicsPipeline.Handle)) != Result.Success)
             {
-                SELogger.Error("Failed to create graphics pipeline", "SEVulkanRender");
+                SELogger.Error($"Failed to create graphics pipeline: {r}", "SEVulkanRender");
             }
 
             v.DestroyShaderModule(device.First, fragShaderModule.First, null);
