@@ -134,6 +134,7 @@ namespace SaturnEngine.Global
         SDL = 1,
         Avalonia = 2,
         Glfw = 3,
+        Silk = 4
     }
     public enum RunningMode : int
     {

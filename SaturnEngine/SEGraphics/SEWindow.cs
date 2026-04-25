@@ -150,6 +150,9 @@ namespace SaturnEngine.SEGraphics
             Attributes[SEWindowAttribute.Cursor_Show] = true;
             Attributes[SEWindowAttribute.Window_Size] = new Vector2D(800, 600);
             Attributes[SEWindowAttribute.Window_Position] = default(Vector2D);
+            Attributes[SEWindowAttribute.Render_API] = GraphicsAPI.Vulkan;
+            Attributes[SEWindowAttribute.Render_BaseVersion] = new VERSION(1,1,0,0);
+            Attributes[SEWindowAttribute.Render_AimVersion] = new VERSION(1,4,0,0);
         }
 
         ~SEWindow()
@@ -217,11 +220,6 @@ namespace SaturnEngine.SEGraphics
         /// 创建窗口，但不会运行它，你可以在调用此函数之前设置窗口的属性，例如大小、标题等。
         /// </summary>
         public abstract void CreateWindow();
-        /// <summary>
-        /// 是否限制鼠标在窗口内
-        /// </summary>
-        /// <param name="lockCursor"></param>
-        public abstract void LockCursor(bool lockCursor);
         /// <summary>
         /// 初始化
         /// </summary>

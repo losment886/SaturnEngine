@@ -21,10 +21,6 @@ public unsafe class SEWindowSDL : SEWindow
         SDL.SetWindowPosition(window, (int)Position.X, (int)Position.Y);
         
     }
-    public override void LockCursor(bool lockCursor)
-    {
-        throw new NotImplementedException();
-    }
     public override void Initialize()
     {
         SDL = Sdl.GetApi();

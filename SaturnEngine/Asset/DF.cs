@@ -66,7 +66,13 @@ namespace SaturnEngine.Asset
         public byte Build;
         public byte Revision;
 
-
+        public VERSION(byte major, byte minor, byte build, byte revision)
+        {
+            Major = major;
+            Minor = minor;
+            Build = build;
+            Revision = revision;
+        }
         public VERSION(Version v)
         {
             Major = (byte)v.Major;

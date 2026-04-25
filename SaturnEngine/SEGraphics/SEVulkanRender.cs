@@ -62,7 +62,9 @@ namespace SaturnEngine.SEGraphics
             fragShaderModule = new SEStaticPtr<ShaderModule>();
 
             // Query required Vulkan instance extensions via SDL.
-            byte** extname = null;
+            if (Hoster is SEWindowSDL)
+            {
+                byte** extname = null;
             uint cou = 0;
             var sdl = Sdl.GetApi();
 
@@ -121,7 +123,49 @@ namespace SaturnEngine.SEGraphics
             {
                 Marshal.FreeHGlobal((IntPtr)extname);
             }
+            }
+            else
+            {
+                var w = Hoster as SEWindowSilk;
+                //w.window.First.VkSurface
+                alr = true;
+                ApplicationInfo ai = new ApplicationInfo()
+                {
+                    ApiVersion = new Version32(1, 3, 0),
+                    ApplicationVersion = new Version32(0, 1, 0),
+                    EngineVersion = new Version32(0, 1, 0),
+                    PApplicationName = (byte*)Marshal.StringToHGlobalAnsi(GVariables.ProgramName).ToPointer(),
+                    PEngineName = (byte*)Marshal.StringToHGlobalAnsi("SaturnEngine").ToPointer(),
+                    SType = StructureType.ApplicationInfo,
+                };
+
+                InstanceCreateInfo ici = new InstanceCreateInfo()
+                {
+                    PApplicationInfo = &ai,
+                    Flags = InstanceCreateFlags.None,
+                    SType = StructureType.InstanceCreateInfo,
+                    EnabledExtensionCount = 0,
+                    PpEnabledExtensionNames = null,
+                    PNext = null,
+                    EnabledLayerCount = 0,
+                    PpEnabledLayerNames = null
+                };
+                Instance ins = new Instance();
+                Result r;
+                if ((r = v.CreateInstance(ref ici, null, &ins)) == Result.Success)
+                {
+                    instance = ins;
+                    GetDeviceNames().ToList().ForEach(x => SELogger.Log($"检测到Vulkan设备: {x}", "SEVulkanRender"));
+                }
+                else
+                {
+                    SELogger.Error($"无法创建Vulkan实例 : {Marshal.GetLastSystemError()} : {Marshal.GetLastPInvokeErrorMessage()} : {r.ToString()}".GetInCurrLang(), "SEVulkanRender");
+                }
+                //khrSurface = new SEStaticPtr<KhrSurface>(new KhrSurface(w.window.First.VkSurface.));
+            }
         }
+
+        private bool alr = false;
         Instance instance;
         Vk v;
         private SEStaticPtr<KhrSurface> khrSurface;
@@ -290,27 +334,36 @@ namespace SaturnEngine.SEGraphics
 
         private unsafe void CreateSurface()
         {
-            var windowSDL = Hoster as SEWindowSDL;
-            if (windowSDL == null) return;
-
-            // Get the KHR surface extension
-            if (!v.TryGetInstanceExtension(instance, out *khrSurface.Handle))
+            if (alr)
             {
-                SELogger.Error("Failed to get KHR surface extension", "SEVulkanRender");
-                return;
-            }
-
-            // Create surface using SDL
-            SurfaceKHR surf;
-            VkNonDispatchableHandle vndh = new VkNonDispatchableHandle();
-            if (Sdl.GetApi().VulkanCreateSurface(windowSDL.window, instance.ToHandle(), &vndh) == SdlBool.True)
-            {
-                surface = new SEStaticPtr<SurfaceKHR>(new SurfaceKHR(vndh.Handle));//Sdl.GetApi().GetWindowSurface(windowSDL.window)
-                SELogger.Log("Vulkan surface created successfully", "SEVulkanRender");
+                var w = Hoster as SEWindowSilk;
+                w.window.First.Initialize();
+                khrSurface.Handle = (KhrSurface*)w.window.First.VkSurface.Create<int>(new VkHandle(instance.Handle), null).Handle;
             }
             else
             {
-                SELogger.Error($"Failed to create Vulkan surface : SDL: {Marshal.PtrToStringUTF8(new nint(Sdl.GetApi().GetError()))} : ", "SEVulkanRender");
+                var windowSDL = Hoster as SEWindowSDL;
+                if (windowSDL == null) return;
+
+                // Get the KHR surface extension
+                if (!v.TryGetInstanceExtension(instance, out *khrSurface.Handle))
+                {
+                    SELogger.Error("Failed to get KHR surface extension", "SEVulkanRender");
+                    return;
+                }
+
+                // Create surface using SDL
+                SurfaceKHR surf;
+                VkNonDispatchableHandle vndh = new VkNonDispatchableHandle();
+                if (Sdl.GetApi().VulkanCreateSurface(windowSDL.window, instance.ToHandle(), &vndh) == SdlBool.True)
+                {
+                    surface = new SEStaticPtr<SurfaceKHR>(new SurfaceKHR(vndh.Handle));//Sdl.GetApi().GetWindowSurface(windowSDL.window)
+                    SELogger.Log("Vulkan surface created successfully", "SEVulkanRender");
+                }
+                else
+                {
+                    SELogger.Error($"Failed to create Vulkan surface : SDL: {Marshal.PtrToStringUTF8(new nint(Sdl.GetApi().GetError()))} : ", "SEVulkanRender");
+                }
             }
         }
 
