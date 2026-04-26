@@ -12,7 +12,7 @@ namespace SaturnEngine.Base
         public Game(string nm,string desc)
         :base(nm,desc)
         {
-            ThisWindow = new SEWindowSilk();
+            ThisWindow = new SEWindowSDL();
             ThisScenes = new List<Scene>();
             ThisSTCs = new List<ulong>();
             UIScene = null;
