@@ -142,6 +142,7 @@
     <ClInclude Include="NRDefine.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="NRVulkanBasic.c" />
     <ClCompile Include="NRWindow.c" />
   </ItemGroup>
   <ItemGroup>

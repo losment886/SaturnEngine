@@ -23,6 +23,9 @@
     <ClCompile Include="NRWindow.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="NRVulkanBasic.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakePresets.json">

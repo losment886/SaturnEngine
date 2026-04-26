@@ -12,7 +12,13 @@ endif()
 project ("SENativeRenderer")
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (SENativeRenderer "NRWindow.c" "NRDefine.h")
+add_executable (SENativeRenderer "NRWindow.c" "NRVulkanBasic.c" "NRDefine.h")
+
+find_package(Vulkan REQUIRED)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan)
+
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET SENativeRenderer PROPERTY C_STANDARD 17)
