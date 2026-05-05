@@ -1,0 +1,4 @@
+J:/SaturnEngine/SENativeRenderer/build/CMakeFiles/SENativeRenderer.dir
+J:/SaturnEngine/SENativeRenderer/build/CMakeFiles/INSTALL.dir
+J:/SaturnEngine/SENativeRenderer/build/CMakeFiles/ALL_BUILD.dir
+J:/SaturnEngine/SENativeRenderer/build/CMakeFiles/ZERO_CHECK.dir
