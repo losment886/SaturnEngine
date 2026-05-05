@@ -9,7 +9,7 @@
     <Company>Lofusoft</Company>
     <Copyright>Lofusoft (C) 2025</Copyright>
     <SignAssembly>False</SignAssembly>
-	<PublishAot>true</PublishAot>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -125,8 +125,67 @@
     </None>
   </ItemGroup>
 
+  <!-- ============================================================
+       SENativeRenderer 项目引用
+       Windows 上使用 MSBuild 项目引用（.vcxproj）
+       macOS/Linux 上通过 CMake 构建，然后自动复制动态库
+       ============================================================ -->
   <ItemGroup>
     <ProjectReference Include="..\SENativeRenderer\SENativeRenderer.vcxproj" />
+  </ItemGroup>
+
+  <!-- ============================================================
+       自动复制 SENativeRenderer 动态库到输出目录
+       - Windows: SENativeRenderer.dll
+       - macOS:   libSENativeRenderer.dylib
+       - Linux:   libSENativeRenderer.so
+       
+       由于 SaturnEngine/bin/$(Configuration)/ 是动态库的输出目录，
+       我们从此目录复制到当前项目的输出目录。
+       
+       所有引用 SaturnEngine 的项目会自动继承此复制行为，
+       因为 .NET SDK 项目的 Content/None 文件会传递给引用项目。
+       ============================================================ -->
+  <ItemGroup>
+    <!-- Windows: SENativeRenderer.dll -->
+    <Content Include="$(SolutionDir)SaturnEngine\bin\$(Configuration)\SENativeRenderer.dll"
+             Condition="Exists('$(SolutionDir)SaturnEngine\bin\$(Configuration)\SENativeRenderer.dll') AND '$(OS)' == 'Windows_NT'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>SENativeRenderer.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+
+    <!-- Windows Debug Symbols: SENativeRenderer.pdb -->
+    <Content Include="$(SolutionDir)SaturnEngine\bin\$(Configuration)\SENativeRenderer.pdb"
+             Condition="Exists('$(SolutionDir)SaturnEngine\bin\$(Configuration)\SENativeRenderer.pdb') AND '$(OS)' == 'Windows_NT'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>SENativeRenderer.pdb</Link>
+      <Visible>false</Visible>
+    </Content>
+
+    <!-- Windows Import Library: SENativeRenderer.lib -->
+    <Content Include="$(SolutionDir)SaturnEngine\bin\$(Configuration)\SENativeRenderer.lib"
+             Condition="Exists('$(SolutionDir)SaturnEngine\bin\$(Configuration)\SENativeRenderer.lib') AND '$(OS)' == 'Windows_NT'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>SENativeRenderer.lib</Link>
+      <Visible>false</Visible>
+    </Content>
+
+    <!-- macOS: libSENativeRenderer.dylib -->
+    <Content Include="$(SolutionDir)SaturnEngine\bin\$(Configuration)\libSENativeRenderer.dylib"
+             Condition="Exists('$(SolutionDir)SaturnEngine\bin\$(Configuration)\libSENativeRenderer.dylib') AND '$(OS)' != 'Windows_NT'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libSENativeRenderer.dylib</Link>
+      <Visible>false</Visible>
+    </Content>
+
+    <!-- Linux: libSENativeRenderer.so -->
+    <Content Include="$(SolutionDir)SaturnEngine\bin\$(Configuration)\libSENativeRenderer.so"
+             Condition="Exists('$(SolutionDir)SaturnEngine\bin\$(Configuration)\libSENativeRenderer.so') AND '$(OS)' != 'Windows_NT'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libSENativeRenderer.so</Link>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

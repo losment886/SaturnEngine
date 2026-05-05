@@ -1,0 +1,237 @@
+﻿{
+  "Project": {
+    "Name": "SaturnEngine",
+    "Description": "Saturn Engine - A modern cross-platform game engine",
+    "RootPath": "./",
+    "Version": "1.0.0"
+  },
+  
+  "BuildProfiles": {
+    "WindowsDebug": {
+      "Platform": "Windows",
+      "Architecture": "x64",
+      "Configuration": "Debug",
+      "EnableAOT": false,
+      "Options": {
+        "IncludePdb": true,
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/Windows/Debug",
+      "Description": "Windows 64位 Debug 构建"
+    },
+    
+    "WindowsRelease": {
+      "Platform": "Windows",
+      "Architecture": "x64",
+      "Configuration": "Release",
+      "EnableAOT": false,
+      "Options": {
+        "IncludePdb": false,
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/Windows/Release",
+      "Description": "Windows 64位 Release 构建"
+    },
+    
+    "WindowsShipping": {
+      "Platform": "Windows",
+      "Architecture": "x64",
+      "Configuration": "Shipping",
+      "EnableAOT": true,
+      "Options": {
+        "IncludePdb": false,
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/Windows/Shipping",
+      "Description": "Windows 64位 Shipping 构建（启用 AOT）"
+    },
+    
+    "MacDebug": {
+      "Platform": "macOS",
+      "Architecture": "ARM64",
+      "Configuration": "Debug",
+      "EnableAOT": false,
+      "Options": {
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/macOS/Debug",
+      "Description": "macOS ARM64 Debug 构建"
+    },
+    
+    "MacRelease": {
+      "Platform": "macOS",
+      "Architecture": "ARM64",
+      "Configuration": "Release",
+      "EnableAOT": true,
+      "Options": {
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/macOS/Release",
+      "Description": "macOS ARM64 Release 构建（启用 AOT）"
+    },
+    
+    "LinuxRelease": {
+      "Platform": "Linux",
+      "Architecture": "x64",
+      "Configuration": "Release",
+      "EnableAOT": true,
+      "Options": {
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/Linux/Release",
+      "Description": "Linux x64 Release 构建（启用 AOT）"
+    },
+    
+    "AndroidRelease": {
+      "Platform": "Android",
+      "Architecture": "ARM64",
+      "Configuration": "Release",
+      "EnableAOT": false,
+      "Options": {
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/Android/Release",
+      "Description": "Android ARM64 Release 构建"
+    },
+    
+    "iOSRelease": {
+      "Platform": "iOS",
+      "Architecture": "ARM64",
+      "Configuration": "Release",
+      "EnableAOT": true,
+      "Options": {
+        "Verbose": false
+      },
+      "OutputDir": "./BuildOutput/iOS/Release",
+      "Description": "iOS ARM64 Release 构建（启用 AOT）"
+    }
+  },
+  
+  "BuildTargets": {
+    "All": {
+      "Description": "编译所有项目",
+      "Projects": []
+    },
+    
+    "Runtime": {
+      "Description": "编译运行时库",
+      "Projects": [
+        "SaturnEngine"
+      ]
+    },
+    
+    "Tools": {
+      "Description": "编译工具集",
+      "Projects": [
+        "SEBuilder",
+        "SEDumper",
+        "FuncTester",
+        "ImageProcesser",
+        "Packager"
+      ]
+    },
+    
+    "Engine": {
+      "Description": "编译引擎核心",
+      "Projects": [
+        "SaturnEngine",
+        "SEBuilder"
+      ]
+    }
+  },
+  
+  "PackageConfigs": {
+    "WindowsPackage": {
+      "SourceProfile": "WindowsRelease",
+      "IncludeDebugSymbols": false,
+      "CompressionLevel": "high",
+      "PackageName": "SaturnEngine-Windows-x64",
+      "AdditionalFiles": [
+        "LICENSE",
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    
+    "MacPackage": {
+      "SourceProfile": "MacRelease",
+      "IncludeDebugSymbols": false,
+      "CompressionLevel": "high",
+      "PackageName": "SaturnEngine-macOS-ARM64",
+      "AdditionalFiles": [
+        "LICENSE",
+        "README.md"
+      ]
+    }
+  },
+  
+  "CookConfigs": {
+    "DefaultCook": {
+      "SourceDir": "./Assets",
+      "OutputDir": "./CookedAssets",
+      "Formats": [
+        "png",
+        "jpg",
+        "fbx",
+        "wav",
+        "ogg"
+      ],
+      "CompressionEnabled": true,
+      "Quality": "high"
+    }
+  },
+  
+  "DependencyCheck": {
+    "RequiredTools": [
+      {
+        "Name": "dotnet",
+        "MinVersion": "8.0",
+        "Platform": "All"
+      },
+      {
+        "Name": "cmake",
+        "MinVersion": "3.20",
+        "Platform": [
+          "Windows",
+          "macOS",
+          "Linux"
+        ]
+      },
+      {
+        "Name": "MSBuild",
+        "MinVersion": "17.0",
+        "Platform": "Windows"
+      },
+      {
+        "Name": "Xcode",
+        "MinVersion": "14.0",
+        "Platform": [
+          "macOS",
+          "iOS"
+        ]
+      },
+      {
+        "Name": "Android NDK",
+        "MinVersion": "21.0",
+        "Platform": "Android",
+        "Environment": "ANDROID_NDK_ROOT"
+      }
+    ]
+  },
+  
+  "PostBuildActions": {
+    "CopyToOutput": [
+      {
+        "From": "./Res",
+        "To": "{OutputDir}/Resources",
+        "Recursive": true
+      }
+    ],
+    
+    "GeneratePackage": {
+      "Enabled": false,
+      "PackageFormat": "zip"
+    }
+  }
+}
+
