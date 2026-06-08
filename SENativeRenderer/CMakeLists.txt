@@ -97,12 +97,12 @@ endif()
 set(SE_RENDERER_SOURCES
         NRWindow.c
         NRVulkanBasic.c
-)
+ "NRLogger.c")
 
 set(SE_RENDERER_HEADERS
         NRDefine.h
         NRExport.h
-)
+ "NRLogger.c")
 
 # ============================================================
 # 创建动态库（SHARED）
