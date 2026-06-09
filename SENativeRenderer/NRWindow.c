@@ -33,3 +33,19 @@ SE_API NRResult NR_CreateWindow(const char* title, u32 width, u32 height, u32 fl
 	}
 	return NRR_MakeSuccess(NRR_STEP_NR_CreateWindow, NRR_CODE_SUCCESS);
 }
+
+SE_API NRResult NR_DestroyWindow()
+{
+	if (!nr_sdl_init)
+	{
+		return NRR_MakeFailure(NRR_STEP_NR_DestroyWindow, NRR_CODE_NOT_INITIALIZED, 0);
+	}
+	if (nr_window == NULL)
+	{
+		return NRR_MakeFailure(NRR_STEP_NR_DestroyWindow, NRR_CODE_WINDOW_NOT_CREATED, 0);
+	}
+	SDL_DestroyWindow(nr_window);
+	nr_window = NULL;
+	return NRR_MakeSuccess(NRR_STEP_NR_DestroyWindow, NRR_CODE_SUCCESS);
+}
+

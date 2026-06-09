@@ -24,3 +24,19 @@ SE_API const char* NR_GetLastError()
 		return buffer;
 	}
 }
+
+
+
+NRResult nr_OnError(NRResult result)
+{
+	nr_last_result = result;
+	if (NRR_FAILED(result))
+	{
+		nr_last_sdl_error_msg = SDL_GetError();
+	}
+	else
+	{
+		nr_last_sdl_error_msg = "No error.";
+	}
+	return result;
+}
