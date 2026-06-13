@@ -36,6 +36,19 @@
 #endif
 
 
+
+#if defined(__APPLE__)
+typedef int8_t			s8;
+typedef int16_t			s16;
+typedef int				s32;
+typedef long long		s64;
+typedef uint8_t			u8;
+typedef uint16_t		u16;
+typedef unsigned int	u32;
+typedef uint64_t		u64;
+typedef float			f32;
+typedef double			f64;
+#else
 typedef int8_t      s8;
 typedef int16_t     s16;
 typedef int32_t     s32;
@@ -46,6 +59,8 @@ typedef uint32_t    u32;
 typedef uint64_t    u64;
 typedef float       f32;
 typedef double      f64;
+#endif
+
 
 //64位宽的结果类型，包含步骤码、严重性、错误码和系统错误码，便于溯源与纠错
 typedef u64 	    NRResult;
@@ -70,6 +85,7 @@ typedef u64 	    NRVersion;
 typedef struct NRRenderer
 {
 	const char* name; //渲染器名称
+	
 };
 
 typedef struct NRRendererCreateInfo
@@ -82,10 +98,16 @@ typedef struct NRRendererCreateInfo
 	NRVersion api_target_version; //渲染API目标版本
 	const char** required_instance_extensions; //必需的实例扩展列表（额外）
 	const char** optional_instance_extensions; //可选的实例扩展列表（额外）
+	s32 required_instance_extensions_count; //必需的实例扩展列表数量（额外）
+	s32 optional_instance_extensions_count; //可选的实例扩展列表数量（额外）
 	const char** required_device_extensions; //必需的设备扩展列表（额外）
 	const char** optional_device_extensions; //可选的设备扩展列表（额外）
-	const char** required_renderer_features; //必需的渲染器功能列表（额外）
-	const char** optional_renderer_features; //可选的渲染器功能列表（额外）
+	s32 required_device_extensions_count; //必需的设备扩展列表数量（额外）
+	s32 optional_device_extensions_count; //可选的设备扩展列表数量（额外）
+	u64** required_renderer_features; //必需的渲染器功能列表（额外）（STC）
+	u64** optional_renderer_features; //可选的渲染器功能列表（额外）（STC）
+	s32 required_renderer_features_count; //必需的渲染器功能列表数量（额外）（STC）
+	s32 optional_renderer_features_count; //可选的渲染器功能列表数量（额外）（STC）
 };
 
 

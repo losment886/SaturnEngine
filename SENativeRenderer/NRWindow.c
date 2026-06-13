@@ -26,10 +26,20 @@ SE_API NRResult NR_CreateWindow(const char* title, u32 width, u32 height, u32 fl
 	{
 		return NRR_MakeFailure(NRR_STEP_NR_CreateWindow, NRR_CODE_NOT_INITIALIZED, 0);
 	}
+	
+#ifdef _WIN32
 	nr_window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, flags);
+#else
+	nr_window = SDL_CreateWindow(title, width, height, flags);//?
+#endif
 	if (nr_window == NULL)
 	{
+#ifdef _WIN32
 		return NRR_MakeFailure(NRR_STEP_NR_CreateWindow, NRR_CODE_CREATE_WINDOW_FAILED, GetLastError());
+#else
+		return NRR_MakeFailure(NRR_STEP_NR_CreateWindow, NRR_CODE_CREATE_WINDOW_FAILED, 0);
+#endif
+		
 	}
 	return NRR_MakeSuccess(NRR_STEP_NR_CreateWindow, NRR_CODE_SUCCESS);
 }
