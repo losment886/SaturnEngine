@@ -21,6 +21,21 @@
     <ClInclude Include="NRExport.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="NRRenderData.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NRShaderCompiler.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NRShaderSource.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NRVec.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NRVulkanUtils.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NRWindow.c">
@@ -30,6 +45,42 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NRLogger.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRRenderData.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRGlobal.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRShaderCompiler.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVec.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanBuffer.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanCommand.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanPipeline.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanRenderPass.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanShader.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanSwapchain.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanSync.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NRVulkanUtils.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

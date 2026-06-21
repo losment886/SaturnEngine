@@ -18,17 +18,37 @@ project(SENativeRenderer
 )
 
 # ============================================================
-# 平台检测
+# 平台检测（使用目标系统名，支持交叉编译）
 # ============================================================
-if(WIN32)
-  set(SE_PLATFORM_WINDOWS TRUE)
-  message(STATUS "[SENativeRenderer] Platform: Windows")
-elseif(APPLE)
-  set(SE_PLATFORM_MACOS TRUE)
-  message(STATUS "[SENativeRenderer] Platform: macOS")
-elseif(UNIX AND NOT APPLE)
-  set(SE_PLATFORM_LINUX TRUE)
-  message(STATUS "[SENativeRenderer] Platform: Linux")
+message(STATUS "[SENativeRenderer] Host: ${CMAKE_HOST_SYSTEM_NAME}, Target: ${CMAKE_SYSTEM_NAME}")
+
+# Prefer explicit target system name when cross-compiling
+if(DEFINED CMAKE_SYSTEM_NAME)
+  string(TOLOWER "${CMAKE_SYSTEM_NAME}" SE__SYSTEM_LOWER)
+  if(SE__SYSTEM_LOWER STREQUAL "windows")
+    set(SE_PLATFORM_WINDOWS TRUE)
+    message(STATUS "[SENativeRenderer] Platform: Windows (target)")
+  elseif(SE__SYSTEM_LOWER STREQUAL "darwin" OR SE__SYSTEM_LOWER STREQUAL "macos")
+    set(SE_PLATFORM_MACOS TRUE)
+    message(STATUS "[SENativeRenderer] Platform: macOS (target)")
+  elseif(SE__SYSTEM_LOWER STREQUAL "linux")
+    set(SE_PLATFORM_LINUX TRUE)
+    message(STATUS "[SENativeRenderer] Platform: Linux (target)")
+  endif()
+endif()
+
+# Fallback to host-detected macros if target detection didn't set any
+if(NOT DEFINED SE_PLATFORM_WINDOWS AND NOT DEFINED SE_PLATFORM_MACOS AND NOT DEFINED SE_PLATFORM_LINUX)
+  if(WIN32)
+    set(SE_PLATFORM_WINDOWS TRUE)
+    message(STATUS "[SENativeRenderer] Platform: Windows (host)")
+  elseif(APPLE)
+    set(SE_PLATFORM_MACOS TRUE)
+    message(STATUS "[SENativeRenderer] Platform: macOS (host)")
+  elseif(UNIX AND NOT APPLE)
+    set(SE_PLATFORM_LINUX TRUE)
+    message(STATUS "[SENativeRenderer] Platform: Linux (host)")
+  endif()
 endif()
 
 # ============================================================
@@ -97,12 +117,28 @@ endif()
 set(SE_RENDERER_SOURCES
         NRWindow.c
         NRVulkanBasic.c
- "NRLogger.c")
+        NRVulkanSwapchain.c
+        NRVulkanRenderPass.c
+        NRVulkanShader.c
+        NRVulkanPipeline.c
+        NRVulkanBuffer.c
+        NRVulkanCommand.c
+        NRVulkanSync.c
+        NRLogger.c
+        NRVec.c
+        NRVulkanUtils.c
+        NRShaderCompiler.c
+        NRRenderData.c
+        NRGlobal.c)
 
 set(SE_RENDERER_HEADERS
         NRDefine.h
         NRExport.h
- "NRLogger.c")
+        NRVulkanUtils.h
+        NRVec.h
+        NRRenderData.h
+        NRShaderCompiler.h
+        NRShaderSource.h)
 
 # ============================================================
 # 创建动态库（SHARED）

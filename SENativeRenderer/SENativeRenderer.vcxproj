@@ -142,11 +142,28 @@
   <ItemGroup>
     <ClInclude Include="NRDefine.h" />
     <ClInclude Include="NRExport.h" />
+    <ClInclude Include="NRRenderData.h" />
+    <ClInclude Include="NRShaderCompiler.h" />
+    <ClInclude Include="NRShaderSource.h" />
+    <ClInclude Include="NRVec.h" />
+    <ClInclude Include="NRVulkanUtils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="NRGlobal.c" />
     <ClCompile Include="NRLogger.c" />
+    <ClCompile Include="NRShaderCompiler.c" />
+    <ClCompile Include="NRVec.c" />
     <ClCompile Include="NRVulkanBasic.c" />
+    <ClCompile Include="NRVulkanBuffer.c" />
+    <ClCompile Include="NRVulkanCommand.c" />
+    <ClCompile Include="NRVulkanPipeline.c" />
+    <ClCompile Include="NRVulkanRenderPass.c" />
+    <ClCompile Include="NRVulkanShader.c" />
+    <ClCompile Include="NRVulkanSwapchain.c" />
+    <ClCompile Include="NRVulkanSync.c" />
+    <ClCompile Include="NRVulkanUtils.c" />
     <ClCompile Include="NRWindow.c" />
+    <ClCompile Include="NRRenderData.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakePresets.json" />
