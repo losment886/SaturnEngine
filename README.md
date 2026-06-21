@@ -1,21 +1,28 @@
 # About
-SaturnEngine主代码
 
-# Feature
-跨平台的2/3D游戏引擎
-基于C#打造
-目前还只是最原始状态
+SaturnEngine 主代码仓库。
 
-目前可用平台：
-  Windows10/11/server19/22/25,
-  MacOS
+---
 
-未来目标平台：
-  iOS(iPadOS),
-  VisionOS,
-  HarmonyOS NEXT,
-  Linux,
-  Android
+# Features
 
-# Notice
-即将架构大改（虽然没啥人来
+* 跨平台 2D / 3D 游戏引擎
+* 基于 C# 开发
+* 当前处于早期原型阶段
+
+---
+
+# Supported Platforms
+
+* Windows 10 or later with desktop env
+* macOS 18 or later
+* Linux kernel 6 or later with desktop env
+
+---
+
+# Planned Platforms
+
+* iOS / iPadOS
+* visionOS
+* HarmonyOS NEXT
+* Android
