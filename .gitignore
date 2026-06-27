@@ -361,4 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/SENativeRenderer/.idea/.idea.SENativeRenderer.cmake/.idea
+/SENativeRenderer/.idea/
+/SENativeRenderer/out/
+/SENativeRenderer/build/
+.idea/
+out/
