@@ -13,9 +13,13 @@ if(POLICY CMP0141)
 endif()
 
 project(SENativeRenderer
-        LANGUAGES C
+        LANGUAGES C CXX
         VERSION 1.0.0
 )
+
+
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23)
 
 # ============================================================
 # 平台检测（使用目标系统名，支持交叉编译）
@@ -111,34 +115,41 @@ if(Vulkan_INCLUDE_DIRS)
   endif()
 endif()
 
+message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+
 # ============================================================
-# 源文件
+# 源文件 C
 # ============================================================
 set(SE_RENDERER_SOURCES
         NRWindow.c
-        NRVulkanBasic.c
-        NRVulkanSwapchain.c
-        NRVulkanRenderPass.c
-        NRVulkanShader.c
-        NRVulkanPipeline.c
-        NRVulkanBuffer.c
-        NRVulkanCommand.c
-        NRVulkanSync.c
         NRLogger.c
         NRVec.c
-        NRVulkanUtils.c
         NRShaderCompiler.c
         NRRenderData.c
-        NRGlobal.c)
+        NRGlobal.c
+        NRVA.c
+)
 
 set(SE_RENDERER_HEADERS
         NRDefine.h
-        NRExport.h
-        NRVulkanUtils.h
+        NRTypedef.h
         NRVec.h
         NRRenderData.h
         NRShaderCompiler.h
-        NRShaderSource.h)
+        NRShaderSource.h
+        )
+
+# ============================================================
+# 源文件 CPP
+# ============================================================
+set(SE_RENDERER_SOURCES_CPP
+        BasicMetal/BasicMetal.cpp
+        )
+
+set(SE_RENDERER_HEADERS_CPP
+        BasicMetal/BasicMetal.hpp
+        )
 
 # ============================================================
 # 创建动态库（SHARED）
@@ -150,6 +161,8 @@ set(SE_RENDERER_HEADERS
 add_library(${PROJECT_NAME} SHARED
         ${SE_RENDERER_SOURCES}
         ${SE_RENDERER_HEADERS}
+        ${SE_RENDERER_SOURCES_CPP}
+        ${SE_RENDERER_HEADERS_CPP}
 )
 
 # 设置导出宏，让 C 代码知道它在构建动态库
@@ -161,7 +174,10 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE SE_BUILD_SHARED)
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${Vulkan_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/ThirdParty/metal-cpp
 )
+
+
 
 if(SDL3_FOUND)
   target_include_directories(${PROJECT_NAME} PRIVATE ${SDL3_INCLUDE_DIR})
@@ -183,6 +199,7 @@ if(SE_PLATFORM_MACOS)
           "-framework QuartzCore"
           "-framework Metal"
           "-framework IOKit"
+          "-framework Foundation"
           "-framework CoreVideo"
           "-framework CoreGraphics"
   )

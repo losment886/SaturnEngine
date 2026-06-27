@@ -17,3 +17,6 @@ const char* nr_last_sdl_error_msg = "No error.";
 
 // 上一次操作结果
 NRResult nr_last_result = 0;
+
+//渲染器创建信息
+struct NRRendererCreateInfo* nr_renderer_create_info = NULL;
