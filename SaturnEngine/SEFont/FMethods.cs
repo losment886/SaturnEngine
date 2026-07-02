@@ -78,7 +78,7 @@ namespace SaturnEngine.SEFont
                 (int)Math.Ceiling(textSize.Width + outlineWidth * 2),
                 (int)Math.Ceiling(textSize.Height + outlineWidth * 2));
 
-            image.Mutate(ctx =>
+            image.Mutate<Rgba32>(ctx =>
             {
                 // 先绘制描边（多次偏移绘制来模拟描边）
                 for (float x = -outlineWidth; x <= outlineWidth; x += outlineWidth / 2)
@@ -90,7 +90,7 @@ namespace SaturnEngine.SEFont
                             ctx.DrawText(
                                 text,
                                 font,
-                                Color.FromRgba(outlineColor.ToGDIColor().R, outlineColor.ToGDIColor().G, outlineColor.ToGDIColor().B, outlineColor.ToGDIColor().A),
+                                //Color.FromRgba(outlineColor.ToGDIColor().R, outlineColor.ToGDIColor().G, outlineColor.ToGDIColor().B, outlineColor.ToGDIColor().A),
                                 new PointF(outlineWidth + x, outlineWidth + y));
                         }
                     }
@@ -100,7 +100,7 @@ namespace SaturnEngine.SEFont
                 ctx.DrawText(
                     text,
                     font,
-                    Color.FromRgba(fillColor.ToGDIColor().R, fillColor.ToGDIColor().G, fillColor.ToGDIColor().B, fillColor.ToGDIColor().A),
+                    //Color.FromRgba(fillColor.ToGDIColor().R, fillColor.ToGDIColor().G, fillColor.ToGDIColor().B, fillColor.ToGDIColor().A),
                     new PointF(outlineWidth, outlineWidth));
             });
             SEImageFile eif = new SEImageFile();
@@ -126,7 +126,7 @@ namespace SaturnEngine.SEFont
                 (int)Math.Ceiling(textSize.Width + padding * 2),
                 (int)Math.Ceiling(textSize.Height + padding * 2));
 
-            image.Mutate(ctx =>
+            image.Mutate<Rgba32>(ctx =>
             {
                 // 绘制阴影
                 if (shadowBlur > 0)

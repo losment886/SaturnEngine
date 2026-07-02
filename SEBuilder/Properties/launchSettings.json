@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SEBuilder": {
+      "commandName": "Project",
+      "commandLineArgs": "SEB_TEST.txt -d"
+    }
+  }
+}

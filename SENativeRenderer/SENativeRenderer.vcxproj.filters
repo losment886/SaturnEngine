@@ -1,97 +1,63 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRWindow.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRLogger.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRVec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRShaderCompiler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRRenderData.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRGlobal.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRVA.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\BasicMetal\BasicMetal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDefine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRTypedef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRVec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRRenderData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderCompiler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\BasicMetal\BasicMetal.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="J:\SaturnEngine\SENativeRenderer\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{027F4019-1DA8-39E6-8135-423784484AF1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{6CECAC6C-6E8B-30A2-94EB-089BF1EDD555}</UniqueIdentifier>
     </Filter>
-    <Filter Include="资源文件">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="NRDefine.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NRExport.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NRRenderData.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NRShaderCompiler.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NRShaderSource.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NRVec.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NRVulkanUtils.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="NRWindow.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanBasic.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRLogger.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRRenderData.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRGlobal.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRShaderCompiler.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVec.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanBuffer.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanCommand.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanPipeline.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanRenderPass.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanShader.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanSwapchain.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanSync.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NRVulkanUtils.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="CMakePresets.json">
-      <Filter>资源文件</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="CMakeLists.txt">
-      <Filter>资源文件</Filter>
-    </Text>
   </ItemGroup>
 </Project>

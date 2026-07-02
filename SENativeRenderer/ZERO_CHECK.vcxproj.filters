@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="J:\SaturnEngine\SENativeRenderer\CMakeFiles\3eaaf177ed556fb69d486364509c2081\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{339EB119-9477-30C2-995A-836467E973F9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

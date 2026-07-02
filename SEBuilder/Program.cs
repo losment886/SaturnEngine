@@ -1,234 +1,205 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using SEBuilder.SECore;
-using SEBuilder.SEPlatform;
 
 namespace SEBuilder;
 
-class Program
+/// <summary>
+/// 单个脚本的范围
+/// </summary>
+public static class SEBuilder
 {
-    static async Task Main(string[] args)
+    public static string ScriptPath { get; set; } = "";
+    public static string BasePath { get; set; } = "";
+    public static Dictionary<string, string> Macros { get; set; } = new Dictionary<string, string>();
+}
+/// <summary>
+/// 全局范围
+/// </summary>
+public static class SEBuilderGlobal
+{
+    public static Dictionary<string, string> Macros_Global { get; set; } = new Dictionary<string, string>();
+}
+
+public class Program
+{
+    public static Version curr_version = new Version(1, 1, 0, 7);
+
+    public static string[] StrSplit(string v)
     {
-        try
+        bool isInQuotes = false;
+        List<string> result = new List<string>();
+        for (int i = 0; i < v.Length; i++)
         {
-            if (args.Length < 1)
+            if (v[i] == '"')
             {
-                Console.WriteLine("SEBuilder - Simple Engine Build System");
-                Console.WriteLine("用法: SEBuilder <命令> [选项]");
-                Console.WriteLine("命令:");
-                Console.WriteLine("  build      编译项目");
-                Console.WriteLine("  package    打包项目");
-                Console.WriteLine("  cook       烘焙资源");
-                Console.WriteLine("  prerender   预渲染资源");
-                Console.WriteLine("  compress    压缩资源");
-                Console.WriteLine();
-                Console.WriteLine("选项:");
-                Console.WriteLine("  --project <路径>    指定项目文件 (.sln, .csproj, .vcxproj) 或项目目录");
-                Console.WriteLine("  --platform <平台>   指定目标平台 (windows, linux, android, ios)");
-                Console.WriteLine("  --configuration <配置> 指定构建配置 (Debug, Release)");
-                Console.WriteLine("  --verbose           输出详细日志");
-                Console.WriteLine("  --help              显示帮助信息");
-                Console.WriteLine("  --version           显示版本信息");
-                
-                Console.WriteLine("进入命令行模式，请在下方输入编译指令");
-                args = Console.ReadLine()?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
-                
+                if( i > 0 && v[i - 1] == '\\') // Check for escaped quote
+                {
+                    continue; // Skip this quote as it's escaped
+                }
+                isInQuotes = !isInQuotes;
             }
-            
-            
-            // 解析命令行参数
-            var cmd = SEBuildCommand.Parse(args);
-
-            if (args.Length == 0)
-                return;
-
-            // 验证项目路径
-            if (string.IsNullOrEmpty(cmd.ProjectPath) && string.IsNullOrEmpty(cmd.ProjectRoot))
+            else if (v[i] == ' ' && !isInQuotes)
             {
-                Console.Error.WriteLine("[SEBuilder] 错误: 未指定项目路径或无法自动检测项目");
-                return;
+                result.Add(v.Substring(0, i));
+                v = v.Substring(i + 1);
+                i = -1;
             }
-
-            // 解析项目
-            var projects = LoadProjects(cmd);
-            if (projects.Count == 0)
-            {
-                Console.Error.WriteLine("[SEBuilder] 错误: 未找到任何可编译的项目");
-                return;
-            }
-
-            // 创建平台
-            var platformInfo = cmd.ToPlatformInfo();
-            var platform = SEPlatformFactory.CreatePlatform(platformInfo);
-
-            Console.WriteLine($"[SEBuilder] 平台: {platform.Name}");
-            Console.WriteLine($"[SEBuilder] 配置: {platformInfo}");
-            Console.WriteLine($"[SEBuilder] 找到项目数: {projects.Count}");
-            Console.WriteLine();
-
-            // 根据命令执行不同操作
-            await ExecuteCommand(cmd, platform, projects);
         }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"[SEBuilder] 发生异常: {ex.Message}");
-            if (args.Any(a => a.Contains("verbose")))
-                Console.Error.WriteLine(ex.StackTrace);
-            Environment.Exit(1);
-        }
+        result.Add(v);
+        return result.ToArray();
     }
-
-    /// <summary>
-    /// 加载项目信息
-    /// </summary>
-    static List<SEProjectInfo> LoadProjects(SEBuildCommand cmd)
+    public static byte[] CompileCodeCS(string code, string nm = "CSharp Code", bool independentDependFile = false, string[]? libpath = null)
     {
-        var projects = new List<SEProjectInfo>();
+        SyntaxTree st = CSharpSyntaxTree.ParseText(code);
 
-        // 如果指定了 .sln 文件
-        if (!string.IsNullOrEmpty(cmd.ProjectPath) && cmd.ProjectPath.EndsWith(".sln"))
+        List<MetadataReference> references = new List<MetadataReference>();
+        string dllp = System.IO.Path.GetDirectoryName(typeof(object).Assembly.Location) ?? "./";
+        Directory.GetFiles(dllp, "*.dll").ToList().ForEach((f) =>
         {
-            Console.WriteLine($"[SEBuilder] 解析解决方案: {cmd.ProjectPath}");
-            projects = SEProjectResolver.ParseSolution(cmd.ProjectPath);
-        }
-        // 如果指定了 .csproj 文件
-        else if (!string.IsNullOrEmpty(cmd.ProjectPath) && cmd.ProjectPath.EndsWith(".csproj"))
-        {
-            Console.WriteLine($"[SEBuilder] 解析项目: {cmd.ProjectPath}");
-            var mainProject = SEProjectResolver.ParseCsprojFile(cmd.ProjectPath);
-            projects.AddRange(CollectAllProjects(mainProject, new HashSet<string>()));
-        }
-        // 如果指定了 .vcxproj 文件
-        else if (!string.IsNullOrEmpty(cmd.ProjectPath) && cmd.ProjectPath.EndsWith(".vcxproj"))
-        {
-            Console.WriteLine($"[SEBuilder] 解析项目: {cmd.ProjectPath}");
-            projects.Add(SEProjectResolver.ParseVcxproj(cmd.ProjectPath));
-        }
-        // 如果指定了目录，查找 .sln 或 CMakeLists.txt
-        else if (Directory.Exists(cmd.ProjectRoot))
-        {
-            Console.WriteLine($"[SEBuilder] 扫描项目目录: {cmd.ProjectRoot}");
-            
-            var slnFiles = Directory.GetFiles(cmd.ProjectRoot, "*.sln");
-            if (slnFiles.Length > 0)
+            try
             {
-                projects = SEProjectResolver.ParseSolution(slnFiles[0]);
+                if (Path.GetFileNameWithoutExtension(f).StartsWith("System") && f.IndexOf("Native") < 0)
+                {
+
+                    references.Add(MetadataReference.CreateFromFile(f));
+                }
+            }
+            catch
+            {
+                //忽略无法加载的DLL
+            }
+        });
+        references.Add(MetadataReference.CreateFromFile(typeof(SEBuilder).Assembly.Location));
+        if (independentDependFile)
+        {
+            if (libpath != null)
+            {
+                foreach (string lp in libpath)
+                {
+                    references.Add(MetadataReference.CreateFromFile(lp));
+                }
+            }
+        }
+
+        var compilation = CSharpCompilation.Create(
+            nm,
+            new[] { st },
+            references: references,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release, allowUnsafe: true, nullableContextOptions: NullableContextOptions.Enable));
+        using (var ms = new MemoryStream())
+        {
+            var rs = compilation.Emit(ms);
+            if (!rs.Success)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var diagnostic in rs.Diagnostics)
+                {
+                    sb.AppendLine(diagnostic.ToString());
+                }
+                Console.WriteLine("CS脚本编译失败" + sb.ToString());
             }
             else
             {
-                // 查找 CMakeLists.txt
-                var cmakeProject = SEProjectResolver.FindCMakeProject(cmd.ProjectRoot);
-                if (cmakeProject != null)
-                    projects.Add(cmakeProject);
+                ms.Seek(0, SeekOrigin.Begin);
+                byte[] assemblyBytes = ms.ToArray();
+
+
+                return assemblyBytes;
             }
         }
 
-        SEProjectResolver.SetDependencies(projects);
 
-        return projects;
+        return [];
     }
 
-    /// <summary>
-    /// 执行编译命令
-    /// </summary>
-    static async Task ExecuteCommand(SEBuildCommand cmd, SEPlatformBase platform, List<SEProjectInfo> projects)
+    
+    public static void ExecuteScript(string code)
     {
-        switch (cmd.Command)
+        byte[] assemblyBytes = CompileCodeCS(code);
+        if (assemblyBytes.Length > 0)
         {
-            case SECommandType.Build:
-                await ExecuteBuild(cmd, platform, projects);
-                break;
-            case SECommandType.Package:
-                await ExecutePackage(cmd, platform, projects);
-                break;
-            case SECommandType.Cook:
-                ExecuteCook(cmd);
-                break;
-            case SECommandType.Prerender:
-                ExecutePrerender(cmd);
-                break;
-            case SECommandType.Compress:
-                ExecuteCompress(cmd);
-                break;
-            default:
-                Console.Error.WriteLine($"[SEBuilder] 未知命令: {cmd.Command}");
-                break;
+            var assembly = System.Reflection.Assembly.Load(assemblyBytes);
+            var entryType = assembly.GetType("Program");
+            if (entryType != null)
+            {
+                var entryMethod = entryType.GetMethod("Main");
+                if (entryMethod != null)
+                {
+                    entryMethod.Invoke(null, null);
+                }
+                else
+                {
+                    Console.WriteLine("Entry.Main method not found.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("SEBuilderScript.Entry type not found.");
+            }
         }
     }
 
-    /// <summary>
-    /// 执行编译
-    /// </summary>
-    static async Task ExecuteBuild(SEBuildCommand cmd, SEPlatformBase platform, List<SEProjectInfo> projects)
+    public static void AddScript()
     {
-        var manager = new SEBuildManager(cmd, platform, projects);
+        
+    }
+    
+    public static void Main(string[] args)
+    {
 
-        if (!manager.ValidateEnvironment(out var error))
+        Console.WriteLine("SEBuilder " + curr_version);
+
+        if(args.Length == 0)
         {
-            Console.Error.WriteLine($"[SEBuilder] 环境验证失败: {error}");
+            Console.WriteLine("Usage: SEBuilder <sebuilder_script> (option) ");
             return;
         }
-
-        var success = await manager.Build();
-        Environment.Exit(success ? 0 : 1);
-    }
-
-    /// <summary>
-    /// 执行打包
-    /// </summary>
-    static async Task ExecutePackage(SEBuildCommand cmd, SEPlatformBase platform, List<SEProjectInfo> projects)
-    {
-        Console.WriteLine("[SEBuilder] 执行打包功能（预留实现）");
-        // TODO: 实现打包功能
-        await Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// 执行烘焙
-    /// </summary>
-    static void ExecuteCook(SEBuildCommand cmd)
-    {
-        Console.WriteLine("[SEBuilder] 执行资源烘焙功能（预留实现）");
-        // TODO: 实现烘焙功能
-    }
-
-    /// <summary>
-    /// 执行预渲染
-    /// </summary>
-    static void ExecutePrerender(SEBuildCommand cmd)
-    {
-        Console.WriteLine("[SEBuilder] 执行预渲染功能（预留实现）");
-        // TODO: 实现预渲染功能
-    }
-
-    /// <summary>
-    /// 执行压缩
-    /// </summary>
-    static void ExecuteCompress(SEBuildCommand cmd)
-    {
-        Console.WriteLine("[SEBuilder] 执行压缩功能（预留实现）");
-        // TODO: 实现压缩功能
-    }
-
-    /// <summary>
-    /// 收集项目及其所有依赖项
-    /// </summary>
-    static List<SEProjectInfo> CollectAllProjects(SEProjectInfo project, HashSet<string> visited)
-    {
-        var result = new List<SEProjectInfo>();
-        if (visited.Contains(project.FilePath))
-            return result;
-
-        visited.Add(project.FilePath);
-        result.Add(project);
-
-        foreach (var dep in project.Dependencies)
+        else
         {
-            result.AddRange(CollectAllProjects(dep, visited));
+            string wholearg = "";
+            for(int i = 0; i < args.Length; i++) {
+                wholearg += args[i] + " ";
+            }
+            wholearg = wholearg.Trim();
+            Console.WriteLine(wholearg);
+            string[] splitArgs = StrSplit(wholearg);
+            foreach (string arg in splitArgs)
+            {
+                Console.WriteLine(arg);
+            }
+            string scriptPath = splitArgs[0];
+            Console.WriteLine("Script Path: " + scriptPath);
+            scriptPath = Path.GetFullPath(scriptPath);
+            Console.WriteLine("Full Script Path: " + scriptPath);
+            if (File.Exists(scriptPath))
+            {
+                string code = File.ReadAllText(scriptPath);
+                if(code.StartsWith("[SEBuilder Script]"))
+                {
+                    // Process the script
+                    Console.WriteLine("Processing script...");
+
+                    code = code.Substring("[SEBuilder Script]".Length).Trim(); // Remove the marker from the code
+
+                    ExecuteScript(code);
+
+                }
+                else
+                {
+                    Console.WriteLine("Invalid script file.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Script file not found.");
+            }
         }
 
-        return result;
     }
 }
