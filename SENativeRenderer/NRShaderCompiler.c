@@ -377,13 +377,13 @@ NRResult nrVkCreateShaderFromHLSL(const char* hlslSource,
         return result;
     }
     
-    // 创建 ShaderModule
-    result = nrVkCreateShaderModule(spirvCode, spirvSize * sizeof(u32), outShaderModule);
-    
     // 释放 SPIR-V 数据
     nrFreeSPIRV(spirvCode);
+
+    (void)spirvSize;
+    *outShaderModule = VK_NULL_HANDLE;
     
-    return result;
+    return NRR_MakeFailure(NRR_STEP_VK_CreateShaderModule, NRR_CODE_NOT_IMPLEMENTED, 0);
 }
 
 // ============================================================

@@ -44,7 +44,7 @@ namespace SaturnEngine.SEMath
         }
 
 
-        [StructLayout(LayoutKind.Explicit)]
+        [StructLayout(LayoutKind.Explicit,Size = 8)]
         //[MethodImpl(MethodImplOptions.NoOptimization)]
         public struct DataLayout
         {
@@ -122,6 +122,10 @@ namespace SaturnEngine.SEMath
             public DataLayout(ulong v)
             {
                 UL = v;
+            }
+            public DataLayout(byte[] v, int index)
+            {
+                UL = BitConverter.ToUInt64(v, index);
             }
             public byte[] GetBytes()
             {

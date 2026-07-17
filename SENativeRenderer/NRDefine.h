@@ -6,11 +6,19 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
-#include "NRVec.h"
 #include "NRTypedef.h"
+#include "NRVec.h"
 
 
 #include <SDL3/SDL.h>
+
+#ifdef __cplusplus
+	#define SE_EXTERN_C_BEGIN extern "C" {
+	#define SE_EXTERN_C_END }
+#else
+	#define SE_EXTERN_C_BEGIN
+	#define SE_EXTERN_C_END
+#endif
 
 
 // ============================================================
@@ -212,6 +220,8 @@ NRResult nr_OnError(NRResult result);
 #define NRR_STEP_NR_PrepareRender 6
 #define NRR_STEP_NR_Render 7
 
+#define NRR_STEP_VK_CreateShaderModule 20
+
 #define NRR_CODE_SUCCESS 0
 #define NRR_CODE_ALREADY_INITIALIZED 1
 #define NRR_CODE_NOT_INITIALIZED 2
@@ -250,6 +260,8 @@ NRResult nr_OnError(NRResult result);
 #define NRV_GetPatch(version) ((u16)((version >> 16) & 0xFFFF))
 #define NRV_GetUser(version) ((u16)(version & 0xFFFF))
 
+
+SE_EXTERN_C_BEGIN
 
 extern bool nr_sdl_init;
 extern SDL_Window* nr_window;
@@ -306,4 +318,5 @@ SE_OUT(NRResult) NR_MainUpdate(f64 deltatime);
 //在c#的主线程中调用，来渲染图像，严格保证在调用准备函数之后调用
 SE_OUT(NRResult) NR_Render(f64 deltatime);
 //在c#的渲染线程中调用，来准备渲染资源，严格保证在调用渲染函数之前调用
+SE_EXTERN_C_END
 SE_OUT(NRResult) NR_PrepareRender(f64 deltatime);

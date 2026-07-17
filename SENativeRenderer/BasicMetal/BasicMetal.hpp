@@ -6,12 +6,14 @@
 // 使用 metal-cpp (C++ binding) 实现
 // ============================================================
 
-#include <Metal/Metal.hpp>
-#include <Metal/MTLDevice.hpp>
-#include <Metal/MTLCommandQueue.hpp>
-#include <Metal/MTLVersion.hpp>
-
 #include "../NRDefine.h"
+
+#if defined(__APPLE__)
+    #include <Metal/Metal.hpp>
+    #include <Metal/MTLDevice.hpp>
+    #include <Metal/MTLCommandQueue.hpp>
+    #include <Metal/MTLVersion.hpp>
+#endif
 
 // ============================================================
 // Metal 内部步骤码（30~39）
@@ -48,6 +50,7 @@
 // ============================================================
 // Metal 内部状态结构体
 // ============================================================
+#if defined(__APPLE__)
 struct NRMetalState {
     // 核心对象
     MTL::Device* device;
@@ -70,12 +73,15 @@ struct NRMetalState {
 
 // 全局 Metal 状态
 extern struct NRMetalState nr_metal_state;
+#endif
 
 // ============================================================
 // Metal 内部函数声明
 // ============================================================
 
 // 枚举并选择最佳 Metal 设备
+SE_EXTERN_C_BEGIN
+
 NRResult nrMetalSelectDevice(const struct NRRendererCreateInfo* createInfo);
 
 // 从设备创建命令队列（渲染队列）
@@ -83,3 +89,5 @@ NRResult nrMetalCreateCommandQueue(void);
 
 // 销毁所有 Metal 资源
 void nrMetalDestroyAll(void);
+
+SE_EXTERN_C_END

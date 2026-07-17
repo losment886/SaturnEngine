@@ -352,7 +352,7 @@ namespace SaturnEngine.Performance
             }
             return null;
         }
-        [Obsolete("混合架构处理器MD大小核心交错排布，懒得每个核心设置了，哪天看看能不能动态获取大小核心排布状况，要么直接设置核心，要么用系统调度")]
+        [Obsolete("正在更新代码")]
         public static SEThread CreateThread(ThreadStart ts, ThreadPriority tp, bool moveable = false, bool TransferIntensive = false)
         {
             PresentRun pr = new PresentRun();
@@ -368,7 +368,7 @@ namespace SaturnEngine.Performance
                         ulong usg = 10000;
                         for (int i = 0; i < UsagePerThread.Length; i++)
                         {
-                            if (ScorePerCore[i] == 3)
+                            if (DefCore[i] == 3)
                             {
                                 if (UsagePerThread[i] < usg)
                                 {
@@ -407,7 +407,7 @@ namespace SaturnEngine.Performance
                                 ulong usg = 10000;
                                 for (int i = 0; i < UsagePerThread.Length; i++)
                                 {
-                                    if (ScorePerCore[i] == 1)
+                                    if (DefCore[i] == 1)
                                     {
                                         if (UsagePerThread[i] < usg)
                                         {
@@ -438,7 +438,7 @@ namespace SaturnEngine.Performance
                                 case ThreadPriority.Normal:
                                     for (int i = 0; i < UsagePerThread.Length; i++)
                                     {
-                                        if (ScorePerCore[i] == 2)
+                                        if (DefCore[i] == 2)
                                         {
                                             if (UsagePerThread[i] < usg)
                                             {
@@ -452,7 +452,7 @@ namespace SaturnEngine.Performance
                                 case ThreadPriority.Highest:
                                     for (int i = 0; i < UsagePerThread.Length; i++)
                                     {
-                                        if (ScorePerCore[i] == 1)
+                                        if (DefCore[i] == 1)
                                         {
                                             if (UsagePerThread[i] < usg)
                                             {
@@ -500,7 +500,7 @@ namespace SaturnEngine.Performance
                         ulong usg = 10000;
                         for (int i = 0; i < UsagePerThread.Length; i++)
                         {
-                            if (ScorePerCore[i] == 1)
+                            if (DefCore[i] == 1)
                             {
                                 if (UsagePerThread[i] < usg)
                                 {
@@ -531,7 +531,7 @@ namespace SaturnEngine.Performance
                         case ThreadPriority.Normal:
                             for (int i = 0; i < UsagePerThread.Length; i++)
                             {
-                                if (ScorePerCore[i] == 2)
+                                if (DefCore[i] == 2)
                                 {
                                     if (UsagePerThread[i] < usg)
                                     {
@@ -545,7 +545,7 @@ namespace SaturnEngine.Performance
                         case ThreadPriority.Highest:
                             for (int i = 0; i < UsagePerThread.Length; i++)
                             {
-                                if (ScorePerCore[i] == 1)
+                                if (DefCore[i] == 1)
                                 {
                                     if (UsagePerThread[i] < usg)
                                     {
@@ -591,13 +591,27 @@ namespace SaturnEngine.Performance
         private static void SetThreadRun(object? o)
         {
             PresentRun pr = (PresentRun)o;
-            if (pr.ThreadID > ScorePerCore.Length)
+            if (pr.ThreadID > CPUThreadCount)
             {
                 pr.ThreadID = 0;
             }
+            if (pr.ThreadID >=0 && SetCurrentThreadAffinity(pr.ThreadID))
+            {
+                UsagePerThread[pr.ThreadID]++;
+                pr.ts.Invoke();
+                UsagePerThread[pr.ThreadID]--;
+
+            }
+            else
+            {
+                pr.ts.Invoke();
+                
+            }
+            
+            /*
             if (GVariables.OS == OS.Windows && pr.ThreadID >= 0)
             {
-                if (ScorePerCore.Length > 64)
+                if (CPUThreadCount > 64)
                 {
                     int gp = WindowsAPI.GetGroupIndex(pr.ThreadID);
                     int mask = (1 << (pr.ThreadID % WindowsAPI.GetActiveProcessorCount((short)gp)));
@@ -618,7 +632,7 @@ namespace SaturnEngine.Performance
             {
                 pr.ts.Invoke();
             }
-
+            */
         }
         public unsafe class WindowsAPI
         {
@@ -722,53 +736,54 @@ namespace SaturnEngine.Performance
                 public byte[] bits;
             }
         }
-        /* 调度管理
-         * tip：手机骁龙处理器最大核心为最后一个id
-         * intel小核心放在后面，大核心在前面
-         * amd高端双ccd要分开调度，x3d暂时不到
-         * amd avx512加速
-         * intel只有 10-11th有avx512
-         */
         /// <summary>
-        /// 0为未知，1为性能核心（线程），2为能效核心，3为大3缓核心（没有相关处理器给我实验，不到排在哪里）
+        /// 0为未知，1为性能核心（无超线程，普通），2为性能核心（开启超线程，普通），3为性能核心（无超线程，频率最高（体质最好）），4为性能核心（开启超线程，频率最高（体质最好）），5为能效核心（无超线程），6为能效核心（开启超线程），7为大3缓核心（专指有X3D的有3DCache的CCD的核心，无超线程），8为大3缓核心（专指有X3D的有3DCache的CCD的核心，开启超线程），9为LPE核心（无超线程），10为LPE核心（开启超线程），11为未知核心（无超线程），12为未知核心（开启超线程）。
+        /// 注：NOVALAKE的CPU有大三缓，但是与X3D不同，按照普通处理
         /// </summary>
-        public static int[] ScorePerCore;
-
+        public static int[] DefCore;
+        public static int CPUCoreCount;
+        public static int CPUThreadCount;
         /// <summary>
         /// 将指定线程挂载到指定核心上,核心超出就默认挂载在CPU0，报错则无作为,Linux也许要root权限，MacOS不知道
         /// </summary>
-        /// <param name="coreId"></param>
-        public static void SetWhichThreadAffinity(nint id, int coreId)
+        /// <param name="tid"></param>
+        public static bool SetWhichThreadAffinity(nint id, int tid)
         {
-            if (coreId > ScorePerCore.Length)
+            if (tid > CPUThreadCount)
             {
-                coreId = 0;
+                tid = 0;
             }
             try
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    var mask = new IntPtr(1 << coreId);
+                    var mask = new IntPtr(1 << tid);
                     WindowsAPI.SetThreadAffinityMask(id, mask);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     var mask = new LinuxAPI.L_cpu_set_t { bits = new byte[128] };
-                    mask.bits[coreId / 8] |= (byte)(1 << (coreId % 8));
+                    mask.bits[tid / 8] |= (byte)(1 << (tid % 8));
                     LinuxAPI.sched_setaffinity(0, new IntPtr(mask.bits.Length), ref mask);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
                     ulong threadId = (ulong)id.ToInt64();
                     var mask = new MacOSAPI.M_cpu_set_t { bits = new byte[128] };
-                    mask.bits[coreId / 8] |= (byte)(1 << (coreId % 8));
+                    mask.bits[tid / 8] |= (byte)(1 << (tid % 8));
                     MacOSAPI.pthread_setaffinity_np(threadId, new IntPtr(mask.bits.Length), ref mask);
                 }
+                else
+                {
+                    return false;
+                }
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("挂载线程到指定核心出错");
                 Console.WriteLine(ex);
+                return false;
             }
         }
 
@@ -776,9 +791,9 @@ namespace SaturnEngine.Performance
         /// 将当前线程挂载到指定核心上,核心超出就默认挂载在CPU0，报错则无作为,Linux也许要root权限，MacOS不知道
         /// </summary>
         /// <param name="coreId"></param>
-        public static void SetCurrentThreadAffinity(int coreId)
+        public static bool SetCurrentThreadAffinity(int coreId)
         {
-            if (coreId > ScorePerCore.Length)
+            if (coreId > CPUThreadCount)
             {
                 coreId = 0;
             }
@@ -803,18 +818,24 @@ namespace SaturnEngine.Performance
                     mask.bits[coreId / 8] |= (byte)(1 << (coreId % 8));
                     MacOSAPI.pthread_setaffinity_np(threadId, new IntPtr(mask.bits.Length), ref mask);
                 }
+                else
+                {
+                    return false;
+                }
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("挂载线程到指定核心出错");
                 Console.WriteLine(ex);
+                return false;
             }
         }
 
         [Obsolete("Linux最好别用，有BUG")]
         public static void SetThreadAffinity(nint threadId, int coreId)
         {
-            if (coreId > ScorePerCore.Length)
+            if (coreId > CPUThreadCount)
             {
                 coreId = 0;
             }
@@ -894,12 +915,28 @@ namespace SaturnEngine.Performance
             {
                 Console.WriteLine(cmp.CpuCoreList[i]);
             }
+            
+            CPUCoreCount = (int)cmp.NumberOfCores;
+            CPUThreadCount = (int)cmp.NumberOfLogicalProcessors;
 
-            ScorePerCore = new int[Environment.ProcessorCount];
+            string cpuName = string.IsNullOrWhiteSpace(cmp.Name) || cmp.Name.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                ? CpuTopology.GetCpuBrandString() ?? cmp.Name
+                : cmp.Name;
+            GVariables.CpuName = cpuName;
+            string nmc = cpuName.ToLowerInvariant();
+            if (nmc.Contains("amd"))
+            {
+                GVariables.CpuVendor = CpuVendor.AMD;
+            }
+            else if (nmc.Contains("intel"))
+            {
+                GVariables.CpuVendor = CpuVendor.Intel;
+            }
+
+            CpuTopology.Detect((int)cmp.NumberOfCores, (int)cmp.NumberOfLogicalProcessors);
             Thrs = new List<SEThread>(0);
-            UsagePerThread = new ulong[Environment.ProcessorCount];
+            UsagePerThread = new ulong[(int)cmp.NumberOfLogicalProcessors];
 
-            string nmc = cmp.Name.ToLower();
             if (nmc.Contains("amd"))
             {
                 Match m = Regex.Match(nmc, @"\d{4,5}");
@@ -919,10 +956,6 @@ namespace SaturnEngine.Performance
                 {
                     if (nmc.Contains("threadripper"))
                     {
-                        for (int i = 0; i < Environment.ProcessorCount; i++)
-                        {
-                            ScorePerCore[i] = 1;
-                        }
                         if (nmc.Contains("pro"))
                         {
                             GVariables.CpuType = CPUType.AMD_Ryzen_ThreadRipperPro;
@@ -938,39 +971,19 @@ namespace SaturnEngine.Performance
                         {
                             if (nmc.Contains("ryzen 5"))
                             {
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 3;
-                                }
                                 GVariables.CpuType = CPUType.AMD_Ryzen5_X3D;
                             }
                             else if (nmc.Contains("ryzen 7"))
                             {
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 3;
-                                }
                                 GVariables.CpuType = CPUType.AMD_Ryzen7_X3D;
                             }
                             else if (nmc.Contains("ryzen 9"))
                             {
-                                for (int i = 0; i < Environment.ProcessorCount / 2; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                                for (int i = Environment.ProcessorCount / 2; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 3;
-                                }
                                 GVariables.CpuType = CPUType.AMD_Ryzen9_X3D;
                             }
                         }
                         else
                         {
-                            for (int i = 0; i < Environment.ProcessorCount; i++)
-                            {
-                                ScorePerCore[i] = 3;
-                            }
                             if (nmc.Contains("ryzen 3"))
                             {
                                 GVariables.CpuType = CPUType.AMD_Ryzen3;
@@ -1016,38 +1029,14 @@ namespace SaturnEngine.Performance
                         }
                         if (nmc.Contains("ultra 5"))
                         {
-                            for (int i = 0; i < 6; i++)
-                            {
-                                ScorePerCore[i] = 1;
-                            }
-                            for (int i = 6; i < Environment.ProcessorCount; i++)
-                            {
-                                ScorePerCore[i] = 2;
-                            }
                             GVariables.CpuType = CPUType.Intel_CoreUltra_5;
                         }
                         else if (nmc.Contains("ultra 7"))
                         {
-                            for (int i = 0; i < 8; i++)
-                            {
-                                ScorePerCore[i] = 1;
-                            }
-                            for (int i = 8; i < Environment.ProcessorCount; i++)
-                            {
-                                ScorePerCore[i] = 2;
-                            }
                             GVariables.CpuType = CPUType.Intel_CoreUltra_7;
                         }
                         else if (nmc.Contains("ultra 9"))
                         {
-                            for (int i = 0; i < 8; i++)
-                            {
-                                ScorePerCore[i] = 1;
-                            }
-                            for (int i = 8; i < Environment.ProcessorCount; i++)
-                            {
-                                ScorePerCore[i] = 2;
-                            }
                             GVariables.CpuType = CPUType.Intel_CoreUltra_9;
                         }
                     }
@@ -1069,77 +1058,18 @@ namespace SaturnEngine.Performance
                         if (nmc.Contains("i3"))
                         {
                             GVariables.CpuType = CPUType.Intel_Core_i3;
-                            for (int i = 0; i < Environment.ProcessorCount; i++)
-                            {
-                                ScorePerCore[i] = 1;
-                            }
-
                         }
                         else if (nmc.Contains("i5"))
                         {
                             GVariables.CpuType = CPUType.Intel_Core_i5;
-                            if (int.Parse(GVariables.CpuVersion) > 11)
-                            {
-                                for (int i = 0; i < Environment.ProcessorCount && i < 12; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                                for (int i = 12; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 2;
-                                }
-                            }
-                            else
-                            {
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                            }
                         }
                         else if (nmc.Contains("i7"))
                         {
                             GVariables.CpuType = CPUType.Intel_Core_i7;
-                            if (int.Parse(GVariables.CpuVersion) > 11)
-                            {
-                                for (int i = 0; i < Environment.ProcessorCount && i < 16; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                                for (int i = 16; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 2;
-                                }
-                            }
-                            else
-                            {
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                            }
                         }
                         else if (nmc.Contains("i9"))
                         {
                             GVariables.CpuType = CPUType.Intel_Core_i9;
-                            if (int.Parse(GVariables.CpuVersion) > 11)
-                            {
-                                for (int i = 0; i < Environment.ProcessorCount && i < 16; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                                for (int i = 16; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 2;
-                                }
-                            }
-                            else
-                            {
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                            }
                         }
                     }
                 }
@@ -1157,10 +1087,6 @@ namespace SaturnEngine.Performance
                     {
                         GVariables.CpuVersion = "0";
                     }
-                    for (int i = 0; i < Environment.ProcessorCount; i++)
-                    {
-                        ScorePerCore[i] = 1;
-                    }
                     GVariables.CpuType = CPUType.Intel_Pentium_G;
                 }
                 else if (nmc.Contains("xeno"))
@@ -1176,10 +1102,6 @@ namespace SaturnEngine.Performance
                     else
                     {
                         GVariables.CpuVersion = "0";
-                    }
-                    for (int i = 0; i < Environment.ProcessorCount; i++)
-                    {
-                        ScorePerCore[i] = 1;
                     }
                     GVariables.CpuType = CPUType.Intel_Xeon;
                 }
@@ -1197,20 +1119,164 @@ namespace SaturnEngine.Performance
                     {
                         GVariables.CpuVersion = "0";
                     }
-                    for (int i = 0; i < Environment.ProcessorCount; i++)
-                    {
-                        ScorePerCore[i] = 1;
-                    }
                     GVariables.CpuType = CPUType.Intel_Celeron_G;
                 }
+            }
+            else if (nmc.Contains("apple") || Regex.IsMatch(nmc, @"\bm\d{1,2}\b") || Regex.IsMatch(nmc, @"\ba\d{1,2}\b"))
+            {
+                GVariables.CpuVendor = CpuVendor.Apple;
+
+                Match m = Regex.Match(nmc, @"\bm\s*(\d{1,2})\b");
+                Match a = Regex.Match(nmc, @"\ba\s*(\d{1,2})\b");
+                if (m.Success)
+                {
+                    GVariables.CpuVersion = m.Groups[1].Value;
+                    if (nmc.Contains("ultra"))
+                    {
+                        GVariables.CpuType = CPUType.Apple_M_Ultra;
+                    }
+                    else if (nmc.Contains("max"))
+                    {
+                        GVariables.CpuType = CPUType.Apple_M_Max;
+                    }
+                    else if (nmc.Contains("pro"))
+                    {
+                        GVariables.CpuType = CPUType.Apple_M_Pro;
+                    }
+                    else
+                    {
+                        GVariables.CpuType = CPUType.Apple_M;
+                    }
+                }
+                else if (a.Success)
+                {
+                    GVariables.CpuVersion = a.Groups[1].Value;
+                    GVariables.CpuType = nmc.Contains("pro") ? CPUType.Apple_A_Pro : CPUType.Apple_A;
+                }
+                else
+                {
+                    GVariables.CpuVersion = "0";
+                }
+            }
+            else if (nmc.Contains("snapdragon") || Regex.IsMatch(nmc, @"\bsm[4687]\d+\b"))
+            {
+                GVariables.CpuVendor = CpuVendor.Quacomm;
+                if (nmc.Contains("elite gen"))
+                {
+                    GVariables.CpuType = CPUType.Qualcomm_Snapdragon_8Elite_Gen;
+                }
+                else if (nmc.Contains("elite"))
+                {
+                    GVariables.CpuType = CPUType.Qualcomm_Snapdragon_8Elite;
+                }
+                else if (nmc.Contains("8 gen") || nmc.Contains("8+") || Regex.IsMatch(nmc, @"\b(8\d{2}|sm8\d+)\b"))
+                {
+                    GVariables.CpuType = CPUType.Qualcomm_Snapdragon_8;
+                }
+                else if (nmc.Contains("7 gen") || Regex.IsMatch(nmc, @"\b(7\d{2}|sm7\d+)\b"))
+                {
+                    GVariables.CpuType = CPUType.Qualcomm_Snapdragon_7;
+                }
+                else if (nmc.Contains("6 gen") || Regex.IsMatch(nmc, @"\b(6\d{2}|sm6\d+)\b"))
+                {
+                    GVariables.CpuType = CPUType.Qualcomm_Snapdragon_6;
+                }
+                else if (nmc.Contains("4 gen") || Regex.IsMatch(nmc, @"\b(4\d{2}|sm4\d+)\b"))
+                {
+                    GVariables.CpuType = CPUType.Qualcomm_Snapdragon_4;
+                }
+
+                Match gen = Regex.Match(nmc, @"\b[4687]\s*gen\s*(\d+)\b");
+                Match model = Regex.Match(nmc, @"\b(?:sm)?([4687]\d{2,4})\b");
+                GVariables.CpuVersion = gen.Success ? gen.Groups[1].Value : model.Success ? model.Groups[1].Value : "0";
+            }
+            else if (nmc.Contains("dimensity") || Regex.IsMatch(nmc, @"\bmt\d+\b"))
+            {
+                GVariables.CpuVendor = CpuVendor.MediaTek;
+                Match model = Regex.Match(nmc, @"\b(?:dimensity|mt)\s*(\d{4})\b");
+                int version = model.Success && int.TryParse(model.Groups[1].Value, out int parsed) ? parsed : 0;
+                GVariables.CpuVersion = version > 0 ? version.ToString() : "0";
+
+                if (version >= 9000)
+                {
+                    GVariables.CpuType = CPUType.MediaTek_Dimensity_9000;
+                }
+                else if (version >= 8000)
+                {
+                    GVariables.CpuType = CPUType.MediaTek_Dimensity_8000;
+                }
+                else if (version >= 7000)
+                {
+                    GVariables.CpuType = CPUType.MediaTek_Dimensity_7000;
+                }
+                else if (version >= 6000)
+                {
+                    GVariables.CpuType = CPUType.MediaTek_Dimensity_6000;
+                }
+            }
+            else if (nmc.Contains("kirin"))
+            {
+                GVariables.CpuVendor = CpuVendor.Hisilicon;
+                Match model = Regex.Match(nmc, @"\bkirin\s*(\d{4})\b");
+                int version = model.Success && int.TryParse(model.Groups[1].Value, out int parsed) ? parsed : 0;
+                GVariables.CpuVersion = version > 0 ? version.ToString() : "0";
+                GVariables.CpuType = version >= 9000 ? CPUType.Hisilicon_Kirin_9000 : CPUType.Hisilicon_Kirin_8000;
+            }
+            else if (nmc.Contains("exynos"))
+            {
+                GVariables.CpuVendor = CpuVendor.Samsung;
+                Match model = Regex.Match(nmc, @"\bexynos\s*(\d{3,5})\b");
+                GVariables.CpuVersion = model.Success ? model.Groups[1].Value : "0";
+                GVariables.CpuType = CPUType.Samsung_Exynos;
+            }
+            else if (nmc.Contains("unisoc") || nmc.Contains("tanggula") || Regex.IsMatch(nmc, @"\bt[78]\d+\b"))
+            {
+                GVariables.CpuVendor = CpuVendor.Unisoc;
+                Match model = Regex.Match(nmc, @"\b(?:tanggula|unisoc|t)\s*(\d{3,5})\b");
+                GVariables.CpuVersion = model.Success ? model.Groups[1].Value : "0";
+                GVariables.CpuType = CPUType.Unisoc_Tanggula;
             }
             else//其他型号以后再说
             {
                 Console.WriteLine("其他处理器");
+                GVariables.CpuVendor = CpuVendor.Unknown;
+                GVariables.CpuType = CPUType.Other;
             }
+            SetCpuTopologyDefCore((int)cmp.NumberOfCores, (int)cmp.NumberOfLogicalProcessors);
             GVariables.OnEngineClose += OnCLe;
 
+
+            SELogger.Log("显示CPU信息");
+            for(int i =0;i < DefCore.Length;i++)
+            {
+                SELogger.Log($"核心{i}类型:{DefCore[i]}");
+            }
+
         }
+
+        private static void SetCpuTopologyDefCore(int fallbackPhysicalCoreCount, int fallbackLogicalProcessorCount)
+        {
+            if (CpuTopology.Cores.Length == 0)
+            {
+                CpuTopology.SetFallback(fallbackPhysicalCoreCount, fallbackLogicalProcessorCount);
+            }
+
+            int physicalCoreCount = CpuTopology.PhysicalCoreCount > 0 ? CpuTopology.PhysicalCoreCount : Math.Max(1, fallbackPhysicalCoreCount);
+            DefCore = new int[physicalCoreCount];
+
+            for (int i = 0; i < DefCore.Length; i++)
+            {
+                if (i < CpuTopology.Cores.Length)
+                {
+                    DefCore[i] = CpuTopology.ToDefCore(in CpuTopology.Cores[i]);
+                }
+                else
+                {
+                    DefCore[i] = fallbackLogicalProcessorCount > fallbackPhysicalCoreCount ? 12 : 11;
+                }
+            }
+        }
+
         public static void OnCLe()
         {
             if (GVariables.OS == OS.Windows)
@@ -1233,7 +1299,7 @@ namespace SaturnEngine.Performance
 
 
 
-                ScorePerCore = new int[Environment.ProcessorCount];
+                DefCore = new int[Environment.ProcessorCount];
                 Thrs = new Dictionary<ulong, SEThread>[Environment.ProcessorCount];
                 for (int i = 0; i < Environment.ProcessorCount; i++)
                 {
@@ -1268,11 +1334,7 @@ namespace SaturnEngine.Performance
                             {
                                 if (nmc.Contains("threadripper"))
                                 {
-                                    for (int i = 0; i < Environment.ProcessorCount; i++)
-                                    {
-                                        ScorePerCore[i] = 1;
-                                    }
-                                    if (nmc.Contains("pro"))
+if (nmc.Contains("pro"))
                                     {
                                         GVariables.CpuType = CPUType.AMD_Ryzen_ThreadRipperPro;
                                     }
@@ -1287,40 +1349,20 @@ namespace SaturnEngine.Performance
                                     {
                                         if (nmc.Contains("ryzen 5"))
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 3;
-                                            }
-                                            GVariables.CpuType = CPUType.AMD_Ryzen5_X3D;
+GVariables.CpuType = CPUType.AMD_Ryzen5_X3D;
                                         }
                                         else if (nmc.Contains("ryzen 7"))
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 3;
-                                            }
-                                            GVariables.CpuType = CPUType.AMD_Ryzen7_X3D;
+GVariables.CpuType = CPUType.AMD_Ryzen7_X3D;
                                         }
                                         else if (nmc.Contains("ryzen 9"))
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount / 2; i++)
-                                            {
-                                                ScorePerCore[i] = 1;
-                                            }
-                                            for (int i = Environment.ProcessorCount / 2; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 3;
-                                            }
                                             GVariables.CpuType = CPUType.AMD_Ryzen9_X3D;
                                         }
                                     }
                                     else
                                     {
-                                        for (int i = 0; i < Environment.ProcessorCount; i++)
-                                        {
-                                            ScorePerCore[i] = 3;
-                                        }
-                                        if (nmc.Contains("ryzen 3"))
+if (nmc.Contains("ryzen 3"))
                                         {
                                             GVariables.CpuType = CPUType.AMD_Ryzen3;
                                         }
@@ -1366,49 +1408,17 @@ namespace SaturnEngine.Performance
                                     if (nmc.Contains("ultra 3"))
                                     {
                                         GVariables.CpuType = CPUType.Intel_CoreUltra_3;
-                                        for (int i = 0; i < 4; i++)
-                                        {
-                                            ScorePerCore[i] = 1;
-                                        }
-                                        for (int i = 4; i < Environment.ProcessorCount; i++)
-                                        {
-                                            ScorePerCore[i] = 2;
-                                        }
                                     }
                                     else if (nmc.Contains("ultra 5"))
                                     {
-                                        for (int i = 0; i < 6; i++)
-                                        {
-                                            ScorePerCore[i] = 1;
-                                        }
-                                        for (int i = 6; i < Environment.ProcessorCount; i++)
-                                        {
-                                            ScorePerCore[i] = 2;
-                                        }
                                         GVariables.CpuType = CPUType.Intel_CoreUltra_5;
                                     }
                                     else if (nmc.Contains("ultra 7"))
                                     {
-                                        for (int i = 0; i < 8; i++)
-                                        {
-                                            ScorePerCore[i] = 1;
-                                        }
-                                        for (int i = 8; i < Environment.ProcessorCount; i++)
-                                        {
-                                            ScorePerCore[i] = 2;
-                                        }
                                         GVariables.CpuType = CPUType.Intel_CoreUltra_7;
                                     }
                                     else if (nmc.Contains("ultra 9"))
                                     {
-                                        for (int i = 0; i < 8; i++)
-                                        {
-                                            ScorePerCore[i] = 1;
-                                        }
-                                        for (int i = 8; i < Environment.ProcessorCount; i++)
-                                        {
-                                            ScorePerCore[i] = 2;
-                                        }
                                         GVariables.CpuType = CPUType.Intel_CoreUltra_9;
                                     }
                                 }
@@ -1430,77 +1440,36 @@ namespace SaturnEngine.Performance
                                     if (nmc.Contains("i3"))
                                     {
                                         GVariables.CpuType = CPUType.Intel_Core_i3;
-                                        for (int i = 0; i < Environment.ProcessorCount; i++)
-                                        {
-                                            ScorePerCore[i] = 1;
-                                        }
-                                        
-                                    }
+}
                                     else if (nmc.Contains("i5"))
                                     {
                                         GVariables.CpuType = CPUType.Intel_Core_i5;
                                         if (int.Parse(GVariables.CpuVersion) > 11)
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount && i < 12; i++)
-                                            {
-                                                ScorePerCore[i] = 1;
-                                            }
-                                            for (int i = 12; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 2;
-                                            }
                                         }
                                         else
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 1;
-                                            }
-                                        }
+}
                                     }
                                     else if (nmc.Contains("i7"))
                                     {
                                         GVariables.CpuType = CPUType.Intel_Core_i7;
                                         if (int.Parse(GVariables.CpuVersion) > 11)
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount && i < 16; i++)
-                                            {
-                                                ScorePerCore[i] = 1;
-                                            }
-                                            for (int i = 16; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 2;
-                                            }
                                         }
                                         else
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 1;
-                                            }
-                                        }
+}
                                     }
                                     else if (nmc.Contains("i9"))
                                     {
                                         GVariables.CpuType = CPUType.Intel_Core_i9;
                                         if (int.Parse(GVariables.CpuVersion) > 11)
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount && i < 16; i++)
-                                            {
-                                                ScorePerCore[i] = 1;
-                                            }
-                                            for (int i = 16; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 2;
-                                            }
                                         }
                                         else
                                         {
-                                            for (int i = 0; i < Environment.ProcessorCount; i++)
-                                            {
-                                                ScorePerCore[i] = 1;
-                                            }
-                                        }
+}
                                     }
                                 }
                             }
@@ -1518,11 +1487,7 @@ namespace SaturnEngine.Performance
                                 {
                                     GVariables.CpuVersion = "0";
                                 }
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                                GVariables.CpuType = CPUType.Intel_Pentium_G;
+GVariables.CpuType = CPUType.Intel_Pentium_G;
                             }
                             else if (nmc.Contains("xeno"))
                             {
@@ -1538,11 +1503,7 @@ namespace SaturnEngine.Performance
                                 {
                                     GVariables.CpuVersion = "0";
                                 }
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                                GVariables.CpuType = CPUType.Intel_Xeon;
+GVariables.CpuType = CPUType.Intel_Xeon;
                             }
                             else if (nmc.Contains("celeron"))
                             {
@@ -1558,11 +1519,7 @@ namespace SaturnEngine.Performance
                                 {
                                     GVariables.CpuVersion = "0";
                                 }
-                                for (int i = 0; i < Environment.ProcessorCount; i++)
-                                {
-                                    ScorePerCore[i] = 1;
-                                }
-                                GVariables.CpuType = CPUType.Intel_Celeron_G;
+GVariables.CpuType = CPUType.Intel_Celeron_G;
                             }
                         }
                         else//其他型号以后再说

@@ -47,11 +47,14 @@ namespace SaturnEngine.Asset
         /// <summary>
         /// Alpha Channel, Range : [0,1], default is 1
         /// </summary>
-        public double A;
+        public float A;
         /// <summary>
         /// Highlight rate,extern for hdr or higher, Range : [0,unlimited), default is 1
         /// </summary>
-        public double HLR;//高亮倍率
+        public float HLR;//高亮倍率
+
+
+        //A 与 HLR共用64bit
         public static implicit operator SEColor(Vector3D v)
         {
             SEColor s = new SEColor(v.X, v.Y, v.Z);
@@ -70,7 +73,7 @@ namespace SaturnEngine.Asset
             A = 1;
             HLR = 1;
         }
-        public SEColor(double r = 0, double g = 0, double b = 0, double a = 1)
+        public SEColor(double r = 0, double g = 0, double b = 0, float a = 1)
         {
             R = r;
             G = g;
@@ -78,7 +81,37 @@ namespace SaturnEngine.Asset
             A = a;
             HLR = 1;
         }
-        public void SetHLR(double hlr = 1)
+
+        public byte[] SaveInBytes()
+        {
+            byte[] b = new byte[32];
+            Helper.DataLayout dl = new Helper.DataLayout();
+            dl.D = R;
+            dl.GetBytes().CopyTo(b, 0);
+            dl.D = G;
+            dl.GetBytes().CopyTo(b, 8);
+            dl.D = B;
+            dl.GetBytes().CopyTo(b, 16);
+            dl.F0 = A;
+            dl.F1 = HLR;
+            dl.GetBytes().CopyTo(b, 24);
+            return b;
+        }
+
+        public void LoadFromBytes(byte[] b)
+        {
+            Helper.DataLayout dl = new Helper.DataLayout(b, 0);
+            R = dl.D;
+            dl = new Helper.DataLayout(b, 8);
+            G = dl.D;
+            dl = new Helper.DataLayout(b, 16);
+            B = dl.D;
+            dl = new Helper.DataLayout(b, 24);
+            A = dl.F0;
+            HLR = dl.F1;
+        }
+
+        public void SetHLR(float hlr = 1)
         {
             HLR = hlr;
         }
@@ -87,14 +120,14 @@ namespace SaturnEngine.Asset
             R = r / 255.0;
             G = g / 255.0;
             B = b / 255.0;
-            A = a / 255.0;
+            A = a / 255.0f;
         }
         public void FromRGBA4BIT(byte r, byte g, byte b, byte a)
         {
             R = r / 127.0;
             G = g / 127.0;
             B = b / 127.0;
-            A = a / 127.0;
+            A = a / 127.0f;
         }
         public void FromRGB8BIT(byte r, byte g, byte b)
         {

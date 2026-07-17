@@ -28,55 +28,59 @@ namespace SaturnEngine.Management.IO
         static byte[] ts = [100, 79, 23, 77, 225, 114, 22, 38];
         static DataLayout dlcf;
         static byte[] btcf;
+        const int ReadAllChunkSize = 4 * 1024 * 1024;
 
         bool ndul = false;
         ulong pswstcstc;
         public byte[] ReadAllInBytes()
         {
-            if (ORGS)
+            int length = EnsureReadableArrayLength(Length);
+            bs.Seek(0, SeekOrigin.Begin);
+            byte[] buffer = new byte[length];
+            int totalRead = 0;
+            while (totalRead < length)
             {
-                bs.Seek(0, SeekOrigin.Begin);
-                byte[] buffer = new byte[Length];
-                bs.ReadExactly(buffer, 0, (int)Length);
-                return buffer;
-            }
-            else
-            {
-                bs.Seek(0, SeekOrigin.Begin);
-                byte[] buffer = new byte[Length];
-                bs.ReadExactly(buffer, 0, (int)Length);
-                if (pswstc != 0)
+                int bytesRead = bs.Read(buffer, totalRead, length - totalRead);
+                if (bytesRead <= 0)
                 {
-                    DC(buffer, 0, (int)Length, pswstc, 0);
+                    throw new EndOfStreamException("流数据不完整".GetInCurrLang());
                 }
-                return buffer;
+                totalRead += bytesRead;
             }
+
+            if (pswstc != 0 && ul && !ORGS)
+            {
+                DC(buffer, 0, length, pswstc, 0);
+            }
+            return buffer;
         }
         public Stream ReadAllInStream()
         {
             SEMemoryStream sem = new SEMemoryStream(Length);
-            if (ORGS)
+            bs.Seek(0, SeekOrigin.Begin);
+            byte[] buffer = new byte[ReadAllChunkSize];
+            long totalRead = 0;
+            int bytesRead = 0;
+            while ((bytesRead = bs.Read(buffer, 0, buffer.Length)) > 0)
             {
-                bs.Seek(0, SeekOrigin.Begin);
-                bs.CopyTo(sem);
-                sem.Seek(0, SeekOrigin.Begin);
-                return sem;
-            }
-            else
-            {
-                bs.Seek(0, SeekOrigin.Begin);
-                bs.CopyTo(sem);
-                sem.Seek(0, SeekOrigin.Begin);
-                if (pswstc != 0)
+                if (pswstc != 0 && ul && !ORGS)
                 {
-                    byte[] buffer = new byte[Length];
-                    sem.ReadExactly(buffer, 0, (int)Length);
-                    DC(buffer, 0, (int)Length, pswstc, 0);
-                    sem.Write(buffer, 0, (int)Length);
-                    sem.Seek(0, SeekOrigin.Begin);
+                    DC(buffer, 0, bytesRead, pswstc, totalRead);
                 }
-                return sem;
+                sem.Write(buffer, 0, bytesRead);
+                totalRead += bytesRead;
             }
+            sem.Seek(0, SeekOrigin.Begin);
+            return sem;
+        }
+
+        private static int EnsureReadableArrayLength(long length)
+        {
+            if (length > int.MaxValue)
+            {
+                throw new InvalidOperationException("流长度超过 byte[] 可支持范围".GetInCurrLang());
+            }
+            return checked((int)length);
         }
         static void DC([Out] byte[] b, int o, int c, ulong psstc, long npsi)
         {

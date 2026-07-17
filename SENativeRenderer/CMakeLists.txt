@@ -143,13 +143,18 @@ set(SE_RENDERER_HEADERS
 # ============================================================
 # 源文件 CPP
 # ============================================================
-set(SE_RENDERER_SOURCES_CPP
-        BasicMetal/BasicMetal.cpp
-        )
+set(SE_RENDERER_SOURCES_CPP)
+set(SE_RENDERER_HEADERS_CPP)
 
-set(SE_RENDERER_HEADERS_CPP
-        BasicMetal/BasicMetal.hpp
-        )
+if(SE_PLATFORM_MACOS)
+  list(APPEND SE_RENDERER_SOURCES_CPP
+          BasicMetal/BasicMetal.cpp
+  )
+
+  list(APPEND SE_RENDERER_HEADERS_CPP
+          BasicMetal/BasicMetal.hpp
+  )
+endif()
 
 # ============================================================
 # 创建动态库（SHARED）
@@ -174,8 +179,13 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE SE_BUILD_SHARED)
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${Vulkan_INCLUDE_DIRS}
-        ${CMAKE_SOURCE_DIR}/ThirdParty/metal-cpp
 )
+
+if(SE_PLATFORM_MACOS)
+  target_include_directories(${PROJECT_NAME} PRIVATE
+          ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/metal-cpp
+  )
+endif()
 
 
 

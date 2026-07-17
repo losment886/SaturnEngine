@@ -1,6 +1,11 @@
 #pragma once
 
-#include "NRDefine.h"
+#include <math.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+
+#include "NRTypedef.h"
 
 typedef struct {
     double x, y, z;

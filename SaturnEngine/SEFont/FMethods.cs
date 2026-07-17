@@ -2,11 +2,14 @@
 using SaturnEngine.SEMath;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Text;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace SaturnEngine.SEFont
@@ -15,6 +18,46 @@ namespace SaturnEngine.SEFont
     public class SEFontRenderer
     {
         private readonly FontCollection _fonts;
+
+        private static Color ToImageSharpColor(SEColor color)
+        {
+            var gdiColor = color.ToGDIColor();
+            return Color.FromPixel(new Rgba32(gdiColor.R, gdiColor.G, gdiColor.B, gdiColor.A));
+        }
+
+        private static Color ToImageSharpColor(SEColor color, float alphaScale)
+        {
+            var gdiColor = color.ToGDIColor();
+            var alpha = (byte)Math.Clamp((int)Math.Round(gdiColor.A * alphaScale), 0, 255);
+            return Color.FromPixel(new Rgba32(gdiColor.R, gdiColor.G, gdiColor.B, alpha));
+        }
+
+        private static FontRectangle MeasureTextBounds(string text, Font font)
+        {
+            var textMetrics = TextMeasurer.Measure(text, new TextOptions(font));
+            return textMetrics.RenderableBounds;
+        }
+
+        private static IPathCollection BuildTextPath(string text, Font font, PointF origin)
+        {
+            var textOptions = new TextOptions(font)
+            {
+                Origin = origin
+            };
+
+            return TextBuilder.GeneratePaths(text, textOptions);
+        }
+
+        private static void FillText(IImageProcessingContext context, string text, Font font, Color color, PointF location)
+        {
+            var textBounds = MeasureTextBounds(text, font);
+            var textPath = BuildTextPath(text, font, new PointF(location.X - textBounds.Left, location.Y - textBounds.Top));
+
+            context.Paint(canvas =>
+            {
+                canvas.Fill(Brushes.Solid(color), textPath);
+            });
+        }
 
         public SEFontRenderer()
         {
@@ -37,24 +80,25 @@ namespace SaturnEngine.SEFont
         }
         public Vector2D GetTextSize(string text, Font font)
         {
-            var textOptions = new TextOptions(font);
-            var textSize = TextMeasurer.MeasureSize(text, textOptions);
-            return new Vector2D(textSize.Width, textSize.Height);
+            var textBounds = MeasureTextBounds(text, font);
+            return new Vector2D(textBounds.Width, textBounds.Height);
         }
         public SEImageFile RenderText(string text,Font font,SEColor fillColor)
         {
-            
-            var textOptions = new TextOptions(font);
-            var textSize = TextMeasurer.MeasureSize(text, textOptions);
+            var textBounds = MeasureTextBounds(text, font);
 
             // 创建图像（考虑描边宽度）
             var image = new Image<Rgba32>(
-                (int)Math.Ceiling(textSize.Width),
-                (int)Math.Ceiling(textSize.Height));
+                Math.Max(1, (int)Math.Ceiling(textBounds.Width)),
+                Math.Max(1, (int)Math.Ceiling(textBounds.Height)));
             
             image.Mutate(ctx =>
             {
-                ctx.DrawText(text,font, Color.FromRgba(fillColor.ToGDIColor().R, fillColor.ToGDIColor().G, fillColor.ToGDIColor().B, fillColor.ToGDIColor().A), new PointF(0,0));
+                var textPath = BuildTextPath(text, font, new PointF(-textBounds.Left, -textBounds.Top));
+                ctx.Paint(canvas =>
+                {
+                    canvas.Fill(Brushes.Solid(ToImageSharpColor(fillColor)), textPath);
+                });
             });
             SEImageFile eif = new SEImageFile();
             eif.BaseImage = image;
@@ -70,38 +114,42 @@ namespace SaturnEngine.SEFont
             float outlineWidth)
         {
             // 测量文本
-            var textOptions = new TextOptions(font);
-            var textSize = TextMeasurer.MeasureSize(text, textOptions);
+            var textBounds = MeasureTextBounds(text, font);
 
             // 创建图像（考虑描边宽度）
             var image = new Image<Rgba32>(
-                (int)Math.Ceiling(textSize.Width + outlineWidth * 2),
-                (int)Math.Ceiling(textSize.Height + outlineWidth * 2));
+                Math.Max(1, (int)Math.Ceiling(textBounds.Width + outlineWidth * 2)),
+                Math.Max(1, (int)Math.Ceiling(textBounds.Height + outlineWidth * 2)));
 
             image.Mutate<Rgba32>(ctx =>
             {
+                var baseOrigin = new PointF(outlineWidth - textBounds.Left, outlineWidth - textBounds.Top);
+                var fillBrush = Brushes.Solid(ToImageSharpColor(fillColor));
+                var outlineBrush = Brushes.Solid(ToImageSharpColor(outlineColor));
+                var outlineStep = outlineWidth <= 0 ? 1f : Math.Max(outlineWidth / 2f, 0.5f);
+
                 // 先绘制描边（多次偏移绘制来模拟描边）
-                for (float x = -outlineWidth; x <= outlineWidth; x += outlineWidth / 2)
+                for (float x = -outlineWidth; x <= outlineWidth; x += outlineStep)
                 {
-                    for (float y = -outlineWidth; y <= outlineWidth; y += outlineWidth / 2)
+                    for (float y = -outlineWidth; y <= outlineWidth; y += outlineStep)
                     {
                         if (Math.Sqrt(x * x + y * y) <= outlineWidth)
                         {
-                            ctx.DrawText(
-                                text,
-                                font,
-                                //Color.FromRgba(outlineColor.ToGDIColor().R, outlineColor.ToGDIColor().G, outlineColor.ToGDIColor().B, outlineColor.ToGDIColor().A),
-                                new PointF(outlineWidth + x, outlineWidth + y));
+                            var outlinePath = BuildTextPath(text, font, new PointF(baseOrigin.X + x, baseOrigin.Y + y));
+                            ctx.Paint(canvas =>
+                            {
+                                canvas.Fill(outlineBrush, outlinePath);
+                            });
                         }
                     }
                 }
 
                 // 再绘制填充文本
-                ctx.DrawText(
-                    text,
-                    font,
-                    //Color.FromRgba(fillColor.ToGDIColor().R, fillColor.ToGDIColor().G, fillColor.ToGDIColor().B, fillColor.ToGDIColor().A),
-                    new PointF(outlineWidth, outlineWidth));
+                var fillPath = BuildTextPath(text, font, baseOrigin);
+                ctx.Paint(canvas =>
+                {
+                    canvas.Fill(fillBrush, fillPath);
+                });
             });
             SEImageFile eif = new SEImageFile();
             eif.BaseImage = image;
@@ -117,14 +165,13 @@ namespace SaturnEngine.SEFont
             PointF shadowOffset,
             float shadowBlur = 0)
         {
-            var textOptions = new TextOptions(font);
-            var textSize = TextMeasurer.MeasureSize(text, textOptions);
+            var textBounds = MeasureTextBounds(text, font);
 
             // 计算图像尺寸（考虑阴影偏移）
             var padding = Math.Max(Math.Abs(shadowOffset.X), Math.Abs(shadowOffset.Y)) + shadowBlur;
             var image = new Image<Rgba32>(
-                (int)Math.Ceiling(textSize.Width + padding * 2),
-                (int)Math.Ceiling(textSize.Height + padding * 2));
+                Math.Max(1, (int)Math.Ceiling(textBounds.Width + padding * 2)),
+                Math.Max(1, (int)Math.Ceiling(textBounds.Height + padding * 2)));
 
             image.Mutate<Rgba32>(ctx =>
             {
@@ -138,41 +185,17 @@ namespace SaturnEngine.SEFont
                             shadowOffset.X * (1 - i * 0.1f),
                             shadowOffset.Y * (1 - i * 0.1f));
 
-                        ctx.DrawText(
-                            text,
-                            font,
-                            Color.FromRgba(
-                                shadowColor.ToGDIColor().R,
-                                shadowColor.ToGDIColor().G,
-                                shadowColor.ToGDIColor().B,
-                                (byte)(shadowColor.ToGDIColor().A * (0.7f - i * 0.2f))),
-                            new PointF(padding + offset.X, padding + offset.Y));
+                        FillText(ctx, text, font, ToImageSharpColor(shadowColor, 0.7f - i * 0.2f), new PointF(padding + offset.X, padding + offset.Y));
                     }
                 }
                 else
                 {
                     // 简单阴影
-                    ctx.DrawText(
-                        text,
-                        font,
-                        Color.FromRgba(
-                                shadowColor.ToGDIColor().R,
-                                shadowColor.ToGDIColor().G,
-                                shadowColor.ToGDIColor().B,
-                                shadowColor.ToGDIColor().A),
-                        new PointF(padding + shadowOffset.X, padding + shadowOffset.Y));
+                    FillText(ctx, text, font, ToImageSharpColor(shadowColor), new PointF(padding + shadowOffset.X, padding + shadowOffset.Y));
                 }
 
                 // 绘制主文本
-                ctx.DrawText(
-                    text,
-                    font,
-                    Color.FromRgba(
-                                textColor.ToGDIColor().R,
-                                textColor.ToGDIColor().G,
-                                textColor.ToGDIColor().B,
-                                textColor.ToGDIColor().A),
-                    new PointF(padding, padding));
+                FillText(ctx, text, font, ToImageSharpColor(textColor), new PointF(padding, padding));
             });
             SEImageFile eif = new SEImageFile();
             eif.BaseImage = image;
@@ -189,7 +212,7 @@ namespace SaturnEngine.SEFont
 
             foreach (var part in textParts)
             {
-                var size = TextMeasurer.MeasureSize(part.Text, new TextOptions(part.Font));
+                var size = MeasureTextBounds(part.Text, part.Font);
 
                 if (currentWidth + size.Width > maxWidth)
                 {
@@ -216,7 +239,7 @@ namespace SaturnEngine.SEFont
 
                 foreach (var part in textParts)
                 {
-                    var size = TextMeasurer.MeasureSize(part.Text, new TextOptions(part.Font));
+                    var size = MeasureTextBounds(part.Text, part.Font);
 
                     // 检查是否需要换行
                     if (x + size.Width > maxWidth && x > 0)
@@ -227,7 +250,7 @@ namespace SaturnEngine.SEFont
                     }
 
                     // 绘制文本部分
-                    ctx.DrawText(part.Text, part.Font, part.Color, new PointF(x, y));
+                    FillText(ctx, part.Text, part.Font, part.Color, new PointF(x, y));
 
                     x += size.Width;
                     lineHeight = Math.Max(lineHeight, size.Height);
@@ -243,7 +266,7 @@ namespace SaturnEngine.SEFont
         {
             image.BaseImage.Mutate(ctx =>
             {
-                ctx.DrawText(text, font, Color.FromRgba(fillColor.ToGDIColor().R, fillColor.ToGDIColor().G, fillColor.ToGDIColor().B, fillColor.ToGDIColor().A), new PointF(0, 0));
+                FillText(ctx, text, font, ToImageSharpColor(fillColor), new PointF(0, 0));
             });
             //image.SaveImageToPNGFile("E:\\sc.png");
         }
@@ -261,28 +284,24 @@ namespace SaturnEngine.SEFont
             // 测量文本
             image.BaseImage.Mutate(ctx =>
             {
+                var fillColorValue = ToImageSharpColor(fillColor);
+                var outlineColorValue = ToImageSharpColor(outlineColor);
+                var outlineStep = outlineWidth <= 0 ? 1f : Math.Max(outlineWidth / 2f, 0.5f);
+
                 // 先绘制描边（多次偏移绘制来模拟描边）
-                for (float x = -outlineWidth; x <= outlineWidth; x += outlineWidth / 2)
+                for (float x = -outlineWidth; x <= outlineWidth; x += outlineStep)
                 {
-                    for (float y = -outlineWidth; y <= outlineWidth; y += outlineWidth / 2)
+                    for (float y = -outlineWidth; y <= outlineWidth; y += outlineStep)
                     {
                         if (Math.Sqrt(x * x + y * y) <= outlineWidth)
                         {
-                            ctx.DrawText(
-                                text,
-                                font,
-                                Color.FromRgba(outlineColor.ToGDIColor().R, outlineColor.ToGDIColor().G, outlineColor.ToGDIColor().B, outlineColor.ToGDIColor().A),
-                                new PointF(outlineWidth + x, outlineWidth + y));
+                            FillText(ctx, text, font, outlineColorValue, new PointF(outlineWidth + x, outlineWidth + y));
                         }
                     }
                 }
 
                 // 再绘制填充文本
-                ctx.DrawText(
-                    text,
-                    font,
-                    Color.FromRgba(fillColor.ToGDIColor().R, fillColor.ToGDIColor().G, fillColor.ToGDIColor().B, fillColor.ToGDIColor().A),
-                    new PointF(outlineWidth, outlineWidth));
+                FillText(ctx, text, font, fillColorValue, new PointF(outlineWidth, outlineWidth));
             });
 
         }
@@ -299,8 +318,7 @@ namespace SaturnEngine.SEFont
         {
             if (!image.IsLoaded)
                 return;
-            var textOptions = new TextOptions(font);
-            var textSize = TextMeasurer.MeasureSize(text, textOptions);
+            var textBounds = MeasureTextBounds(text, font);
 
             // 计算图像尺寸（考虑阴影偏移）
             var padding = Math.Max(Math.Abs(shadowOffset.X), Math.Abs(shadowOffset.Y)) + shadowBlur;
@@ -317,41 +335,17 @@ namespace SaturnEngine.SEFont
                             shadowOffset.X * (1 - i * 0.1f),
                             shadowOffset.Y * (1 - i * 0.1f));
 
-                        ctx.DrawText(
-                            text,
-                            font,
-                            Color.FromRgba(
-                                shadowColor.ToGDIColor().R,
-                                shadowColor.ToGDIColor().G,
-                                shadowColor.ToGDIColor().B,
-                                (byte)(shadowColor.ToGDIColor().A * (0.7f - i * 0.2f))),
-                            new PointF(padding + offset.X, padding + offset.Y));
+                        FillText(ctx, text, font, ToImageSharpColor(shadowColor, 0.7f - i * 0.2f), new PointF(padding + offset.X, padding + offset.Y));
                     }
                 }
                 else
                 {
                     // 简单阴影
-                    ctx.DrawText(
-                        text,
-                        font,
-                        Color.FromRgba(
-                                shadowColor.ToGDIColor().R,
-                                shadowColor.ToGDIColor().G,
-                                shadowColor.ToGDIColor().B,
-                                shadowColor.ToGDIColor().A),
-                        new PointF(padding + shadowOffset.X, padding + shadowOffset.Y));
+                    FillText(ctx, text, font, ToImageSharpColor(shadowColor), new PointF(padding + shadowOffset.X, padding + shadowOffset.Y));
                 }
 
                 // 绘制主文本
-                ctx.DrawText(
-                    text,
-                    font,
-                    Color.FromRgba(
-                                textColor.ToGDIColor().R,
-                                textColor.ToGDIColor().G,
-                                textColor.ToGDIColor().B,
-                                textColor.ToGDIColor().A),
-                    new PointF(padding, padding));
+                FillText(ctx, text, font, ToImageSharpColor(textColor), new PointF(padding, padding));
             });
 
         }
@@ -369,7 +363,7 @@ namespace SaturnEngine.SEFont
 
             foreach (var part in textParts)
             {
-                var size = TextMeasurer.MeasureSize(part.Text, new TextOptions(part.Font));
+                var size = MeasureTextBounds(part.Text, part.Font);
 
                 if (currentWidth + size.Width > maxWidth)
                 {
@@ -396,7 +390,7 @@ namespace SaturnEngine.SEFont
 
                 foreach (var part in textParts)
                 {
-                    var size = TextMeasurer.MeasureSize(part.Text, new TextOptions(part.Font));
+                    var size = MeasureTextBounds(part.Text, part.Font);
 
                     // 检查是否需要换行
                     if (x + size.Width > maxWidth && x > 0)
@@ -407,7 +401,7 @@ namespace SaturnEngine.SEFont
                     }
 
                     // 绘制文本部分
-                    ctx.DrawText(part.Text, part.Font, part.Color, new PointF(x, y));
+                    FillText(ctx, part.Text, part.Font, part.Color, new PointF(x, y));
 
                     x += size.Width;
                     lineHeight = Math.Max(lineHeight, size.Height);

@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <stdint.h>
+
 #if defined(__APPLE__)
 typedef int8_t			s8;
 typedef int16_t			s16;

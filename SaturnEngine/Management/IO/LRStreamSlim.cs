@@ -34,16 +34,32 @@ namespace SaturnEngine.Management.IO
             {
                 return p.ReadAllInBytes();
             }
+            if (lg > int.MaxValue)
+            {
+                throw new InvalidOperationException("流长度超过 byte[] 可支持范围".GetInCurrLang());
+            }
             bs.Seek(bsoff, SeekOrigin.Begin);
-            byte[] buffer = new byte[lg];
-            bs.ReadExactly(buffer, 0, (int)lg);
+            byte[] buffer = new byte[checked((int)lg)];
+            bs.ReadExactly(buffer, 0, buffer.Length);
             return buffer;
         }
         public Stream ReadAllInStream()
         {
             SEMemoryStream sem = new SEMemoryStream(lg);
             bs.Seek(bsoff, SeekOrigin.Begin);
-            bs.CopyTo(sem);
+            byte[] buffer = new byte[40960000];
+            long remaining = lg;
+            while (remaining > 0)
+            {
+                int readSize = (int)Math.Min(buffer.Length, remaining);
+                int bytesRead = bs.Read(buffer, 0, readSize);
+                if (bytesRead <= 0)
+                {
+                    throw new EndOfStreamException("流数据不完整".GetInCurrLang());
+                }
+                sem.Write(buffer, 0, bytesRead);
+                remaining -= bytesRead;
+            }
             sem.Seek(0, SeekOrigin.Begin);
             return sem;
         }

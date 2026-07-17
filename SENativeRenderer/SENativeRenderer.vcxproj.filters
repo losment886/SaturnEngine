@@ -22,9 +22,6 @@
     <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRVA.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\BasicMetal\BasicMetal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDefine.h">
@@ -43,9 +40,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\BasicMetal\BasicMetal.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

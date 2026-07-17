@@ -3,7 +3,7 @@ using static SaturnEngine.SEMath.Helper;
 
 namespace SaturnEngine.Asset
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential,Size = 8)]
     public struct TIME
     {
         public ushort YEAR;
@@ -59,6 +59,7 @@ namespace SaturnEngine.Asset
             return dl.UL;
         }
     }
+    [StructLayout(LayoutKind.Sequential,Size = 4)]
     public struct VERSION
     {
         public byte Major;

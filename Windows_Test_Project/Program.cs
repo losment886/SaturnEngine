@@ -96,50 +96,38 @@ namespace Windows_Test_Project
             Console.WriteLine(RuntimeInformation.OSArchitecture);
             Console.WriteLine(RuntimeInformation.OSDescription);
             Console.WriteLine(RuntimeInformation.FrameworkDescription);
-
-
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             CultureInfo currentUICulture = CultureInfo.CurrentUICulture;
-
             Console.WriteLine($"当前区域设置: {currentCulture.Name}"); // 例如: zh-CN
             Console.WriteLine($"当前UI语言: {currentUICulture.Name}");
             Console.WriteLine($"显示名称: {currentCulture.DisplayName}");
             Console.WriteLine($"英文名称: {currentCulture.EnglishName}");
             Console.WriteLine($"本地名称: {currentCulture.NativeName}");
+
+
+
             
-
-
-            //Console.WriteLine();
             SELogger.Log("启动错误监视程序");
             //SEDumperFunction.StartDumper();
-
-            
-
             //SELogger.Input();
-
             SELogger.Log("初始化主机");
             GameHost gh = new GameHost();
-
             SELogger.Log("启用无线调试");
             SENLTcpHostConfig hc = new SENLTcpHostConfig();
             hc.HostName = "DebuggerHost";
             hc.ListenIp = IPAddress.Any;
             hc.ListenPort = 10550;
-
             SENLDebuggerFunctionConfig fc = new SENLDebuggerFunctionConfig();
             fc.FunctionList = new List<KeyValuePair<string, Action<string[]>>>();
             fc.FunctionList.Add(new KeyValuePair<string, Action<string[]>>("TestFunc", (args) => { SELogger.Log("TestFunc called with args: " + string.Join(", ", args)); }));
             fc.FunctionList.Add(new KeyValuePair<string, Action<string[]>>("Close", (args) => { SELogger.Log("This Window Will Be Closed"); GVariables.MainWindows[0].Close(); }));
             SENetLogger.Register(SENLHostType.TCP, SENLTcpMethod.Host, hc, fc);
-
             SELogger.Log("加载游戏");
             gh.LoadGame(new BasicGame());
             //SELogger.Log("设置窗口样式");
             //gh.SetWindowStyle(WindowStyle.GetDefault());
             SELogger.Log("启动游戏主机");
             gh.Start();
-            
-
         }
 
         public class BasicScene : Scene

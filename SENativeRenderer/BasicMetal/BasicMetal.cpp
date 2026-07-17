@@ -1,8 +1,9 @@
-#include <Metal/Metal.hpp>
-#include <Metal/MTLDevice.hpp>
-#include <Metal/MTLCommandQueue.hpp>
+#if defined(__APPLE__)
+    #include <Metal/Metal.hpp>
+    #include <Metal/MTLDevice.hpp>
+    #include <Metal/MTLCommandQueue.hpp>
 
-#include "BasicMetal.hpp"
+    #include "BasicMetal.hpp"
 
 // ============================================================
 // BasicMetal.cpp
@@ -177,3 +178,5 @@ void nrMetalDestroyAll(void)
 
     fprintf(stdout, "[Metal] All resources destroyed\n");
 }
+
+#endif

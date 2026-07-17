@@ -602,108 +602,120 @@ namespace SaturnEngine.Management
     }
     public class SELogger
     {
+        static object clientLock = new object();
         public static string? Input()
         {
+            lock(clientLock)
             return Console.ReadLine();
         }
         public static void Log(Str message) => Log(message, "Saturn Engine");
         public static void Log(Str message,string sender)
         {
-            if (GVariables.LogOnline)
-                SENetLogger.Log(message, sender);
-            if (!GVariables.AllowConsoleOutput) return;
-            var pr = Console.ForegroundColor;
-            Console.Write($"[");
-            Console.ForegroundColor = ConsoleColor.Blue;
-            //Console.Write(part.V1);
-            Console.Write(sender);
-            Console.ForegroundColor = pr;
-            Console.Write("]<");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write("LOG");
-            Console.ForegroundColor = pr;
-            Console.Write("(");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.Write($"{DateTime.Now}");
-            Console.ForegroundColor = pr;
-
-            //]<LOG({DateTime.Now})>
-            Console.Write($")>");
-            for (int i = 0; i < message.Sts.Count; i++)
+            lock(clientLock)
             {
-                var part = message.Sts[i];
-                var prevColor = Console.ForegroundColor;
-                Console.ForegroundColor = part.V2.Color.GetConsoleColor();
-                Console.Write(part.V1);
-                Console.ForegroundColor = prevColor;
+                if (GVariables.LogOnline)
+                    SENetLogger.Log(message, sender);
+                if (!GVariables.AllowConsoleOutput) return;
+                var pr = Console.ForegroundColor;
+                Console.Write($"[");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                //Console.Write(part.V1);
+                Console.Write(sender);
+                Console.ForegroundColor = pr;
+                Console.Write("]<");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("LOG");
+                Console.ForegroundColor = pr;
+                Console.Write("(");
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.Write($"{DateTime.Now}");
+                Console.ForegroundColor = pr;
+
+                //]<LOG({DateTime.Now})>
+                Console.Write($")>");
+                for (int i = 0; i < message.Sts.Count; i++)
+                {
+                    var part = message.Sts[i];
+                    var prevColor = Console.ForegroundColor;
+                    Console.ForegroundColor = part.V2.Color.GetConsoleColor();
+                    Console.Write(part.V1);
+                    Console.ForegroundColor = prevColor;
+                }
+                Console.WriteLine();
             }
-            Console.WriteLine();
+            
         }
         public static void Warn(Str message) => Warn(message, "Saturn Engine");
         public static void Warn(Str message, string sender )
         {
-            if (GVariables.LogOnline)
-                SENetLogger.Warn(message, sender);
-            if (!GVariables.AllowConsoleOutput) return;
-            var pr = Console.ForegroundColor;
-            Console.Write($"[");
-            Console.ForegroundColor = ConsoleColor.Blue;
-            //Console.Write(part.V1);
-            Console.Write(sender);
-            Console.ForegroundColor = pr;
-            Console.Write("]<");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("WARN");
-            Console.ForegroundColor = pr;
-            Console.Write("(");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.Write($"{DateTime.Now}");
-            Console.ForegroundColor = pr;
-
-            //]<LOG({DateTime.Now})>
-            Console.Write($")>");
-            for (int i = 0; i < message.Sts.Count; i++)
+            lock(clientLock)
             {
-                var part = message.Sts[i];
-                var prevColor = Console.ForegroundColor;
-                Console.ForegroundColor = part.V2.Color.GetConsoleColor();
-                Console.Write(part.V1);
-                Console.ForegroundColor = prevColor;
+                if (GVariables.LogOnline)
+                    SENetLogger.Warn(message, sender);
+                if (!GVariables.AllowConsoleOutput) return;
+                var pr = Console.ForegroundColor;
+                Console.Write($"[");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                //Console.Write(part.V1);
+                Console.Write(sender);
+                Console.ForegroundColor = pr;
+                Console.Write("]<");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("WARN");
+                Console.ForegroundColor = pr;
+                Console.Write("(");
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.Write($"{DateTime.Now}");
+                Console.ForegroundColor = pr;
+
+                //]<LOG({DateTime.Now})>
+                Console.Write($")>");
+                for (int i = 0; i < message.Sts.Count; i++)
+                {
+                    var part = message.Sts[i];
+                    var prevColor = Console.ForegroundColor;
+                    Console.ForegroundColor = part.V2.Color.GetConsoleColor();
+                    Console.Write(part.V1);
+                    Console.ForegroundColor = prevColor;
+                }
+                Console.WriteLine();
             }
-            Console.WriteLine();
         }
         public static void Error(Str message) => Error(message, "Saturn Engine");
         public static void Error(Str message, string sender)
         {
-            if (GVariables.LogOnline)
-                SENetLogger.Error(message, sender);
-            if (!GVariables.AllowConsoleOutput) return;
-            var pr = Console.ForegroundColor;
-            Console.Write($"[");
-            Console.ForegroundColor = ConsoleColor.Blue;
-            //Console.Write(part.V1);
-            Console.Write(sender);
-            Console.ForegroundColor = pr;
-            Console.Write("]<");
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write("ERROR");
-            Console.ForegroundColor = pr;
-            Console.Write("(");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.Write($"{DateTime.Now}");
-            Console.ForegroundColor = pr;
-
-            //]<LOG({DateTime.Now})>
-            Console.Write($")>");
-            for (int i = 0; i < message.Sts.Count; i++)
+            lock(clientLock)
             {
-                var part = message.Sts[i];
-                var prevColor = Console.ForegroundColor;
-                Console.ForegroundColor = part.V2.Color.GetConsoleColor();
-                Console.Write(part.V1);
-                Console.ForegroundColor = prevColor;
+                if (GVariables.LogOnline)
+                    SENetLogger.Error(message, sender);
+                if (!GVariables.AllowConsoleOutput) return;
+                var pr = Console.ForegroundColor;
+                Console.Write($"[");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                //Console.Write(part.V1);
+                Console.Write(sender);
+                Console.ForegroundColor = pr;
+                Console.Write("]<");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("ERROR");
+                Console.ForegroundColor = pr;
+                Console.Write("(");
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.Write($"{DateTime.Now}");
+                Console.ForegroundColor = pr;
+
+                //]<LOG({DateTime.Now})>
+                Console.Write($")>");
+                for (int i = 0; i < message.Sts.Count; i++)
+                {
+                    var part = message.Sts[i];
+                    var prevColor = Console.ForegroundColor;
+                    Console.ForegroundColor = part.V2.Color.GetConsoleColor();
+                    Console.Write(part.V1);
+                    Console.ForegroundColor = prevColor;
+                }
+                Console.WriteLine();
             }
-            Console.WriteLine();
         }
     }
 }

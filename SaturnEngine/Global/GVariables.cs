@@ -198,6 +198,40 @@ namespace SaturnEngine.Global
         AMD_Ryzen_ThreadRipperPro,
 
         AMD_EPYC,
+
+        //Apple
+        Apple_M,
+        Apple_M_Pro,
+        Apple_M_Max,
+        Apple_M_Ultra,
+        Apple_A,
+        Apple_A_Pro,
+
+        //Qualcomm
+        Qualcomm_Snapdragon_8Elite_Gen,
+        Qualcomm_Snapdragon_8Elite,
+        Qualcomm_Snapdragon_8,
+        Qualcomm_Snapdragon_7,
+        Qualcomm_Snapdragon_6,
+        Qualcomm_Snapdragon_4,
+
+        //MediaTek
+        MediaTek_Dimensity_9000,
+        MediaTek_Dimensity_8000,
+        MediaTek_Dimensity_7000,
+        MediaTek_Dimensity_6000,
+
+        //Hisilicon，仅显示支持OpenHarmony的
+        Hisilicon_Kirin_9000,
+        Hisilicon_Kirin_8000,
+
+        //mobile other
+        Samsung_Exynos,
+        Unisoc_Tanggula,
+
+
+
+        Other
     }
     public enum GraphicsAPI : int
     {
@@ -250,7 +284,7 @@ namespace SaturnEngine.Global
     }
     public enum CpuVendor : int
     {
-        Unknow = 0,//可能系统限制无法识别
+        Unknown = 0,//可能系统限制无法识别
 
         //mobile
         Hisilicon = 1,
@@ -269,6 +303,8 @@ namespace SaturnEngine.Global
 
 
         OEM = 9,
+
+        Samsung = 10,
 
         //other
         Other = 114514

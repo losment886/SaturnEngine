@@ -6,6 +6,9 @@ using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using SaturnEngine.Global;
 
+#pragma warning disable CS8500
+#pragma warning disable CS8600
+#pragma warning disable CS8605
 namespace SaturnEngine.Management.SEMemory
 {
     public unsafe class SEStaticPtr<T> : IEnumerable<T>, IEnumerator<T> 
@@ -779,3 +782,8 @@ namespace SaturnEngine.Management.SEMemory
 
 
 }
+
+
+#pragma warning restore CS8500
+#pragma warning restore CS8600
+#pragma warning restore CS8605
