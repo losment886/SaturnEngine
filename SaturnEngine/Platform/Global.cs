@@ -133,7 +133,7 @@ namespace SaturnEngine.Platform
             GVariables.ScriptEngineGlobal.AddDepending(typeof(Vector3D));
             GVariables.ScriptEngineGlobal.AddDepending(typeof(Vector2D));
             GVariables.ScriptEngineGlobal.AddDepending(typeof(Dispatcher));
-            GVariables.ScriptEngineGlobal.AddDepending(typeof(Tree));
+            GVariables.ScriptEngineGlobal.AddDepending(typeof(BinaryTree));
             GVariables.ScriptEngineGlobal.AddDepending(typeof(BitEditor));
             GVariables.ScriptEngineGlobal.AddDepending(typeof(Console));
             GVariables.ScriptEngineGlobal.AddDepending(typeof(Path));
