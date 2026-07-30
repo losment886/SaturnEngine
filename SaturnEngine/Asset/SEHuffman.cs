@@ -130,11 +130,11 @@
             foreach (byte bt in b)
                 frequency[bt]++;
 
-            List<Tree> trs = new List<Tree>();
+            List<BinaryTree> trs = new List<BinaryTree>();
             for (int t = 0; t < frequency.Length; t++)
             {
                 if (frequency[t] == 0) continue;
-                trs.Add(new Tree { Value = t, Level = frequency[t] });
+                trs.Add(new BinaryTree { Value = t, Level = frequency[t] });
             }
 
             if (trs.Count == 0)
@@ -144,11 +144,11 @@
             while (trs.Count > 1)
             {
                 trs.Sort();
-                Tree left = trs[0];
-                Tree right = trs[1];
+                BinaryTree left = trs[0];
+                BinaryTree right = trs[1];
                 trs.RemoveRange(0, 2);
 
-                Tree parent = new Tree
+                BinaryTree parent = new BinaryTree
                 {
                     Level = left.Level + right.Level,
                     Left = left,
@@ -159,7 +159,7 @@
                 trs.Add(parent);
             }
 
-            Tree root = trs[0];
+            BinaryTree root = trs[0];
             Dictionary<byte, Bits> encodingMap = new Dictionary<byte, Bits>();
 
             root.OnEachDo += (current, isLeaf) =>
@@ -223,11 +223,11 @@
             Array.Copy(encodedData, 1028, huffmanBytes, 0, huffmanBytes.Length);
 
             // Rebuild Huffman Tree
-            List<Tree> nodes = new List<Tree>();
+            List<BinaryTree> nodes = new List<BinaryTree>();
             for (int i = 0; i < frequency.Length; i++)
             {
                 if (frequency[i] > 0)
-                    nodes.Add(new Tree { Value = i, Level = frequency[i] });
+                    nodes.Add(new BinaryTree { Value = i, Level = frequency[i] });
             }
 
             if (nodes.Count == 0)
@@ -236,11 +236,11 @@
             while (nodes.Count > 1)
             {
                 nodes.Sort();
-                Tree left = nodes[0];
-                Tree right = nodes[1];
+                BinaryTree left = nodes[0];
+                BinaryTree right = nodes[1];
                 nodes.RemoveRange(0, 2);
 
-                Tree parent = new Tree
+                BinaryTree parent = new BinaryTree
                 {
                     Level = left.Level + right.Level,
                     Left = left,
@@ -251,12 +251,12 @@
                 nodes.Add(parent);
             }
 
-            Tree root = nodes[0];
+            BinaryTree root = nodes[0];
             Bits bits = BitEditor.BytesToBits(huffmanBytes);
 
             // Decode bits
             List<byte> decodedData = new List<byte>();
-            Tree current = root;
+            BinaryTree current = root;
             for (int i = 0; i < bitCount; i++)
             {
                 current = bits.bts[i] ? current.Right : current.Left;
