@@ -261,7 +261,7 @@ namespace SaturnEngine.Global
         XBox = 8,
         PlayStation = 9,
 
-        Unknow = 114514
+        Unknown = 114514
     }
     public enum InternetMethod : int
     {

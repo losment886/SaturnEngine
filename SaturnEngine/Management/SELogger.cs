@@ -194,6 +194,11 @@ namespace SaturnEngine.Management
         UDP = 2,
         Both = 3,
     }
+    public enum SENLUdpMode
+    {
+        Broadcast = 0,
+        Unicast = 1,
+    }
     public struct SENLTcpHostConfig
     {
         public string HostName;
@@ -203,6 +208,21 @@ namespace SaturnEngine.Management
         public List<IPAddress>? BanIp;
         public SENLTcpHostHandler? OnClientConnected;
         public static bool AllowDebug;
+    }
+    public struct SENLUdpConfig
+    {
+        public SENLUdpMode Mode;
+        public string? TargetHost;
+        public IPAddress? BroadcastAddress;
+        public int Port;
+
+        public SENLUdpConfig()
+        {
+            Mode = SENLUdpMode.Broadcast;
+            TargetHost = null;
+            BroadcastAddress = IPAddress.Broadcast;
+            Port = 0;
+        }
     }
     public struct SENLDebuggerFunctionConfig
     {
@@ -228,7 +248,9 @@ namespace SaturnEngine.Management
     /// </summary>
     public class SENetLogger
     {
-
+        /// <summary>
+        /// Debug function list, used for remote debugging. The key is the function name, the value is the function to execute. The function takes an array of strings as arguments. You must register your own functions to the list.
+        /// </summary>
         public static List<KeyValuePair<string, Action<string[]>>> SystemFunctionList = new List<KeyValuePair<string, Action<string[]>>>();
         // subscribe to engine close so network logger can shutdown
         public static void Init()
@@ -250,24 +272,53 @@ namespace SaturnEngine.Management
         static SENLTcpMethod cactm; 
         static SENLTcpHostConfig cachc;
         static SENLDebuggerFunctionConfig cacfc;
+        static SENLUdpConfig cacuc;
         static SEThread tcpt;
-        static SEThread udpt;
+        static CancellationTokenSource? tcpCts;
+        static Task? reconnectTask;
+
         // TCP runtime objects
         static TcpListener? tcplistener;
         static List<TcpClient> tcpClients = new List<TcpClient>();
         static TcpClient? tcpClientOut;
         static object clientLock = new object();
+
+        // Broadcast queue for async sending
+        static System.Collections.Concurrent.ConcurrentQueue<string> broadcastQueue = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        static SemaphoreSlim broadcastSemaphore = new SemaphoreSlim(0);
+        static Task? broadcastTask;
+
+        // UDP runtime objects
+        static UdpClient? udpClient;
+        static IPEndPoint? udpTarget;
+
         const int DefaultPort = 52525;
+
+        static (string host, int port) ParseHostPort(string hostName, int defaultPort)
+        {
+            string host = hostName;
+            int port = defaultPort;
+            if (host.Contains(':'))
+            {
+                var sp = host.Split(':');
+                host = sp[0];
+                int.TryParse(sp[1], out port);
+            }
+            return (host, port);
+        }
+
         static void StopTcp()
         {
             tcprunning = false;
-            Dispatcher.Sleep(1.0);
+            try { tcpCts?.Cancel(); } catch { }
             try
             {
-                tcpt.Dispose();
+                tcpt?.Dispose();
                 tcpt = null;
             }
             catch { }
+            try { reconnectTask?.Wait(1000); } catch { }
+            reconnectTask = null;
         }
 
         /// <summary>
@@ -282,19 +333,33 @@ namespace SaturnEngine.Management
                 tcprunning = false;
                 udprunning = false;
 
+                // cancel tokens
+                try { tcpCts?.Cancel(); } catch { }
+                tcpCts = null;
+
+                // signal broadcast task to exit
+                broadcastSemaphore.Release();
+                try { broadcastTask?.Wait(1000); } catch { }
+                broadcastTask = null;
+
+                // wait for reconnect task
+                try { reconnectTask?.Wait(1000); } catch { }
+                reconnectTask = null;
+
                 // stop tcp worker thread
                 try { tcpt?.Dispose(); } catch { }
                 tcpt = null;
-                try { udpt?.Dispose(); } catch { }
-                udpt = null;
 
                 // stop listener
                 try { tcplistener?.Stop(); } catch { }
                 tcplistener = null;
 
                 // close outbound client
-                try { if (tcpClientOut != null) { tcpClientOut.Close(); } } catch { }
-                tcpClientOut = null;
+                lock (clientLock)
+                {
+                    try { if (tcpClientOut != null) { tcpClientOut.Close(); } } catch { }
+                    tcpClientOut = null;
+                }
 
                 // close all connected clients
                 lock (clientLock)
@@ -305,6 +370,11 @@ namespace SaturnEngine.Management
                     }
                     tcpClients.Clear();
                 }
+
+                // close UDP client
+                try { udpClient?.Close(); } catch { }
+                udpClient = null;
+                udpTarget = null;
             }
             catch { }
         }
@@ -313,19 +383,92 @@ namespace SaturnEngine.Management
         {
             try { Shutdown(); } catch { }
         }
+
+        static void RegUdp(SENLUdpConfig? uc)
+        {
+            try
+            {
+                if (udpClient != null)
+                {
+                    try { udpClient.Close(); } catch { }
+                    udpClient = null;
+                }
+
+                cacuc = uc ?? new SENLUdpConfig();
+                int port = cacuc.Port == 0 ? DefaultPort : cacuc.Port;
+
+                if (cacuc.Mode == SENLUdpMode.Broadcast)
+                {
+                    udpClient = new UdpClient();
+                    udpClient.EnableBroadcast = true;
+                    var broadcastAddr = cacuc.BroadcastAddress ?? IPAddress.Broadcast;
+                    udpTarget = new IPEndPoint(broadcastAddr, port);
+                }
+                else // Unicast
+                {
+                    if (!string.IsNullOrEmpty(cacuc.TargetHost))
+                    {
+                        var (host, targetPort) = ParseHostPort(cacuc.TargetHost, port);
+                        udpClient = new UdpClient();
+                        // Resolve host to IP
+                        try
+                        {
+                            var addresses = Dns.GetHostAddresses(host);
+                            if (addresses.Length > 0)
+                            {
+                                udpTarget = new IPEndPoint(addresses[0], targetPort);
+                            }
+                        }
+                        catch
+                        {
+                            // Try parsing as direct IP
+                            if (IPAddress.TryParse(host, out var ip))
+                            {
+                                udpTarget = new IPEndPoint(ip, targetPort);
+                            }
+                        }
+                    }
+                }
+
+                if (udpClient != null && udpTarget != null)
+                {
+                    udprunning = true;
+                    UDPSupport = true;
+                }
+            }
+            catch
+            {
+                udprunning = false;
+                UDPSupport = false;
+                try { udpClient?.Close(); } catch { }
+                udpClient = null;
+            }
+        }
+
         static void RegTcp(SENLTcpMethod? tm, SENLTcpHostConfig? hc, SENLDebuggerFunctionConfig? fc)
         {
             StopTcp();
             cactm = tm ?? SENLTcpMethod.Host;
             cachc = hc ?? new SENLTcpHostConfig();
             cacfc = fc ?? new SENLDebuggerFunctionConfig();
+
             // start tcp worker if needed
             if ((HostType == SENLHostType.TCP || HostType == SENLHostType.Both) && TCPSupport)
             {
                 tcprunning = true;
+                tcpCts = new CancellationTokenSource();
                 try
                 {
-                    tcpt = Dispatcher.CreateThreadORG(new ThreadStart(TcpWorker), ThreadPriority.BelowNormal);
+                    // Start broadcast sender task
+                    broadcastTask = Task.Run(BroadcastSenderWorker);
+
+                    // Start reconnect task if in client mode
+                    if (cactm == SENLTcpMethod.Client || cactm == SENLTcpMethod.Both)
+                    {
+                        reconnectTask = Task.Run(() => ReconnectWorker(tcpCts.Token));
+                    }
+
+                    tcpt = Dispatcher.CreateThread(new ThreadStart(TcpWorker), ThreadPriority.BelowNormal);
                     tcpt.Start();
                 }
                 catch
@@ -335,7 +478,7 @@ namespace SaturnEngine.Management
             }
 
         }
-        public static void Register(SENLHostType ht,SENLTcpMethod? tm, SENLTcpHostConfig? hc, SENLDebuggerFunctionConfig? fc)
+        public static void Register(SENLHostType ht, SENLTcpMethod? tm, SENLTcpHostConfig? hc, SENLDebuggerFunctionConfig? fc, SENLUdpConfig? uc = null)
         {
             switch (ht)
             {
@@ -345,16 +488,70 @@ namespace SaturnEngine.Management
                     break;
                 case SENLHostType.UDP:
                     HostType = ht;
+                    RegUdp(uc);
                     break;
                 case SENLHostType.Both:
                     HostType = ht;
                     RegTcp(tm, hc, fc);
+                    RegUdp(uc);
                     break;
                 default:
                     return;
             }
         }
 
+
+        static async Task ReconnectWorker(CancellationToken ct)
+        {
+            try
+            {
+                while (!ct.IsCancellationRequested && tcprunning)
+                {
+                    bool needReconnect = false;
+                    lock (clientLock)
+                    {
+                        needReconnect = tcpClientOut == null;
+                    }
+
+                    if (needReconnect && !string.IsNullOrEmpty(cachc.HostName))
+                    {
+                        try
+                        {
+                            var (host, port) = ParseHostPort(cachc.HostName, DefaultPort);
+                            var nc = new TcpClient();
+                            var connectTask = nc.ConnectAsync(host, port);
+                            await Task.WhenAny(connectTask, Task.Delay(2000, ct)).ConfigureAwait(false);
+
+                            if (nc.Connected)
+                            {
+                                lock (clientLock)
+                                {
+                                    if (tcpClientOut == null) // double check
+                                    {
+                                        tcpClientOut = nc;
+                                        Task.Run(() => HandleClientReceive(nc));
+                                    }
+                                    else
+                                    {
+                                        try { nc.Close(); } catch { }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                try { nc.Close(); } catch { }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    // Wait 2 seconds before next reconnect attempt
+                    await Task.Delay(2000, ct).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch { }
+        }
 
         static void TcpWorker()
         {
@@ -369,104 +566,70 @@ namespace SaturnEngine.Management
                     tcplistener.Start();
                 }
 
-                // if client mode, try to connect to HostName:port (format ip:port or ip)
+                // if client mode, try initial connection
                 if ((cactm == SENLTcpMethod.Client || cactm == SENLTcpMethod.Both) && !string.IsNullOrEmpty(cachc.HostName))
                 {
                     try
                     {
-                        string host = cachc.HostName;
-                        int port = cachc.ListenPort == 0 ? DefaultPort : cachc.ListenPort;
-                        if (host.Contains(':'))
-                        {
-                            var sp = host.Split(':');
-                            host = sp[0];
-                            int.TryParse(sp[1], out port);
-                        }
-                        tcpClientOut = new TcpClient();
-                        var t = tcpClientOut.ConnectAsync(host, port);
+                        var (host, port) = ParseHostPort(cachc.HostName, cachc.ListenPort == 0 ? DefaultPort : cachc.ListenPort);
+                        var newClient = new TcpClient();
+                        var t = newClient.ConnectAsync(host, port);
                         t.Wait(2000);
-                        if (!tcpClientOut.Connected)
+                        if (!newClient.Connected)
                         {
-                            try { tcpClientOut.Close(); } catch { }
-                            tcpClientOut = null;
+                            try { newClient.Close(); } catch { }
                         }
                         else
                         {
+                            lock (clientLock)
+                            {
+                                tcpClientOut = newClient;
+                            }
                             // start receive loop for outbound connection
-                            Task.Run(() => HandleClientReceive(tcpClientOut));
+                            Task.Run(() => HandleClientReceive(newClient));
                         }
                     }
                     catch { }
                 }
 
-                while (tcprunning)
+                // Accept loop
+                while (tcprunning && tcplistener != null)
                 {
-                    // accept new clients
                     try
                     {
-                        if (tcplistener != null && tcplistener.Pending())
-                        {
-                            var client = tcplistener.AcceptTcpClient();
-                            // check allow/ban
-                            try
-                            {
-                                var remote = ((IPEndPoint)client.Client.RemoteEndPoint).Address;
-                                if (cachc.BanIp != null && cachc.BanIp.Contains(remote))
-                                {
-                                    try { client.Close(); } catch { }
-                                }
-                                else if (cachc.AllowIp != null && cachc.AllowIp.Count > 0 && !cachc.AllowIp.Contains(remote))
-                                {
-                                    try { client.Close(); } catch { }
-                                }
-                                else
-                                {
-                                    bool accept = true;
-                                    try { if (cachc.OnClientConnected != null) accept = cachc.OnClientConnected(client); } catch { }
-                                    if (!accept) { try { client.Close(); } catch { } }
-                                    else
-                                    {
-                                        lock (clientLock) { tcpClients.Add(client); }
-                                        Task.Run(() => HandleClientReceive(client));
-                                    }
-                                }
-                            }
-                            catch { try { client.Close(); } catch { } }
-                        }
-                    }
-                    catch { }
-
-                    // attempt reconnect outbound if needed
-                    if ((cactm == SENLTcpMethod.Client || cactm == SENLTcpMethod.Both) && tcpClientOut == null && !string.IsNullOrEmpty(cachc.HostName))
-                    {
+                        var client = tcplistener.AcceptTcpClient();
+                        // check allow/ban
                         try
                         {
-                            string host = cachc.HostName;
-                            int port = DefaultPort;
-                            if (host.Contains(':'))
+                            var remote = ((IPEndPoint)client.Client.RemoteEndPoint).Address;
+                            if (cachc.BanIp != null && cachc.BanIp.Contains(remote))
                             {
-                                var sp = host.Split(':');
-                                host = sp[0];
-                                int.TryParse(sp[1], out port);
+                                try { client.Close(); } catch { }
                             }
-                            var nc = new TcpClient();
-                            var t = nc.ConnectAsync(host, port);
-                            t.Wait(2000);
-                            if (nc.Connected)
+                            else if (cachc.AllowIp != null && cachc.AllowIp.Count > 0 && !cachc.AllowIp.Contains(remote))
                             {
-                                tcpClientOut = nc;
-                                Task.Run(() => HandleClientReceive(tcpClientOut));
+                                try { client.Close(); } catch { }
                             }
                             else
                             {
-                                try { nc.Close(); } catch { }
-                                tcpClientOut = null;
+                                bool accept = true;
+                                try { if (cachc.OnClientConnected != null) accept = cachc.OnClientConnected(client); } catch { }
+                                if (!accept) { try { client.Close(); } catch { } }
+                                else
+                                {
+                                    lock (clientLock) { tcpClients.Add(client); }
+                                    Task.Run(() => HandleClientReceive(client));
+                                }
                             }
                         }
-                        catch { tcpClientOut = null; }
+                        catch { try { client.Close(); } catch { } }
                     }
-
-                    Dispatcher.Sleep(0.05);
+                    catch (SocketException) 
+                    { 
+                        // Listener stopped, exit loop
+                        if (!tcprunning) break;
+                    }
+                    catch { }
                 }
             }
             catch { }
@@ -474,6 +637,44 @@ namespace SaturnEngine.Management
             {
                 try { tcplistener?.Stop(); } catch { }
             }
+        }
+
+        static bool TryDispatchCommand(string line)
+        {
+            try
+            {
+                // parse command: FUNCTION ARG1 ARG2 ...
+                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0) return false;
+                var fname = parts[0];
+                var args = parts.Skip(1).ToArray();
+
+                // First check SystemFunctionList
+                foreach (var kv in SystemFunctionList)
+                {
+                    if (string.Equals(kv.Key, fname, StringComparison.OrdinalIgnoreCase))
+                    {
+                        try { kv.Value(args); } catch { }
+                        return true;
+                    }
+                }
+
+                // If not found in system functions, check user functions
+                if (cacfc.FunctionList != null)
+                {
+                    foreach (var kv in cacfc.FunctionList)
+                    {
+                        if (string.Equals(kv.Key, fname, StringComparison.OrdinalIgnoreCase))
+                        {
+                            try { kv.Value(args); } catch { }
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+            catch { return false; }
         }
 
         static async Task HandleClientReceive(TcpClient client)
@@ -486,82 +687,119 @@ namespace SaturnEngine.Management
                 {
                     string? line = await sr.ReadLineAsync().ConfigureAwait(false);
                     if (line == null) break;
-                    // parse command: FUNCTION ARG1 ARG2 ...
-                    var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length == 0) continue;
-                    var fname = parts[0];
-                    var args = parts.Skip(1).ToArray();
-                    try
-                    {
-                        if (cacfc.FunctionList != null)
-                        {
-                            //SystemFunctionList
-                            foreach (var kv in SystemFunctionList)
-                            {
-                                if (string.Equals(kv.Key, fname, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    try { kv.Value(args); } catch { }
-                                    break;
-                                }
-                            }
-                            foreach (var kv in cacfc.FunctionList)
-                            {
-                                if (string.Equals(kv.Key, fname, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    try { kv.Value(args); } catch { }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    catch { }
+                    TryDispatchCommand(line);
                 }
             }
             catch { }
             finally
             {
-                try { lock (clientLock) { tcpClients.Remove(client); } } catch { }
+                try 
+                { 
+                    lock (clientLock) 
+                    { 
+                        // If this is the outbound client, clear it so reconnect logic can trigger
+                        if (ReferenceEquals(client, tcpClientOut))
+                        {
+                            tcpClientOut = null;
+                        }
+                        tcpClients.Remove(client); 
+                    } 
+                } 
+                catch { }
                 try { client.Close(); } catch { }
             }
         }
 
-        static void Broadcast(string s)
+        static async Task BroadcastSenderWorker()
         {
-            byte[] data = Encoding.UTF8.GetBytes(s + "\n");
-            lock (clientLock)
-            {
-                for (int i = tcpClients.Count - 1; i >= 0; i--)
-                {
-                    var c = tcpClients[i];
-                    try
-                    {
-                        if (c.Connected)
-                        {
-                            var ns = c.GetStream();
-                            ns.Write(data, 0, data.Length);
-                        }
-                        else
-                        {
-                            c.Close();
-                            tcpClients.RemoveAt(i);
-                        }
-                    }
-                    catch
-                    {
-                        try { c.Close(); } catch { }
-                        tcpClients.RemoveAt(i);
-                    }
-                }
-            }
             try
             {
-                if (tcpClientOut != null && tcpClientOut.Connected)
+                while (tcprunning)
                 {
-                    var ns = tcpClientOut.GetStream();
-                    ns.Write(data, 0, data.Length);
+                    await broadcastSemaphore.WaitAsync().ConfigureAwait(false);
+                    if (!tcprunning) break;
+
+                    while (broadcastQueue.TryDequeue(out string? message))
+                    {
+                        if (message == null) continue;
+                        byte[] data = Encoding.UTF8.GetBytes(message + "\n");
+
+                        // Get snapshot of clients
+                        List<TcpClient> clientsCopy;
+                        TcpClient? outClientCopy;
+                        lock (clientLock)
+                        {
+                            clientsCopy = new List<TcpClient>(tcpClients);
+                            outClientCopy = tcpClientOut;
+                        }
+
+                        // Send to all connected clients (non-blocking)
+                        for (int i = clientsCopy.Count - 1; i >= 0; i--)
+                        {
+                            var c = clientsCopy[i];
+                            try
+                            {
+                                if (c.Connected)
+                                {
+                                    var ns = c.GetStream();
+                                    await ns.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    lock (clientLock)
+                                    {
+                                        c.Close();
+                                        tcpClients.Remove(c);
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                try
+                                {
+                                    lock (clientLock)
+                                    {
+                                        c.Close();
+                                        tcpClients.Remove(c);
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+
+                        // Send to outbound client if exists
+                        if (outClientCopy != null)
+                        {
+                            try
+                            {
+                                if (outClientCopy.Connected)
+                                {
+                                    var ns = outClientCopy.GetStream();
+                                    await ns.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+                                }
+                            }
+                            catch { }
+                        }
+
+                        // Send via UDP if enabled
+                        if (udprunning && udpClient != null && udpTarget != null)
+                        {
+                            try
+                            {
+                                udpClient.Send(data, data.Length, udpTarget);
+                            }
+                            catch { }
+                        }
+                    }
                 }
             }
             catch { }
+        }
+
+        static void Broadcast(string s)
+        {
+            broadcastQueue.Enqueue(s);
+            try { broadcastSemaphore.Release(); } catch { }
         }
 
         static bool LevelAllows(LogLevel level)

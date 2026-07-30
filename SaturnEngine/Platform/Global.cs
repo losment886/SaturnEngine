@@ -37,8 +37,49 @@ namespace SaturnEngine.Platform
         {
             GVariables.OSVersion = Environment.OSVersion.Version;
             GVariables.ProgramType = ProgramTypes.Game3D;
+            //GVariables.OS = Environment.OSVersion.Platform;
             //GVariables.MainWindows = new List<SEWindow>();
+            if(Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                GVariables.OS = OS.Windows;
+            }
+            else if(Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                GVariables.OS = OS.MacOS;
+            }
+            else if(Environment.OSVersion.Platform == PlatformID.MacOSX)
+            {
+                GVariables.OS = OS.MacOS;
+            }
+            else if(Environment.OSVersion.Platform == PlatformID.Xbox)
+            {
+                GVariables.OS = OS.XBox;
+            }
+            else if(OperatingSystem.IsAndroid())
+            {
+                GVariables.OS = OS.Android;
+            }
+            else if(OperatingSystem.IsIOS())
+            {
+                GVariables.OS = OS.IOS;
+            }
+            else if(OperatingSystem.IsWindows())
+            {
+                GVariables.OS = OS.Windows;
+            }
+            else if(OperatingSystem.IsLinux())
+            {
+                GVariables.OS = OS.Linux;
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                GVariables.OS = OS.MacOS;
+            }
             
+            else
+            {
+                GVariables.OS = OS.Unknown;
+            }
 
             SENetLogger.Init(); 
 
@@ -70,6 +111,7 @@ namespace SaturnEngine.Platform
 
             Dispatcher.Init();
             SEMonitor.Init();
+            SEMSV.Init();
 #if !SaturnEngine_Release//release下脚本无效，直接编译进程序
             GVariables.ScriptEngineGlobal = new ScriptEngine.SEScriptEngine();
             GVariables.ScriptEngineGlobal.Init(ScriptEngine.SEScriptEngine.EnableScriptType.All);

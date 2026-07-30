@@ -32,7 +32,7 @@ namespace SaturnEngine.Performance
         public static void Init()
         {
             SELogger.Log("生成监视线程".GetInCurrLang());
-            LGT = Dispatcher.CreateThreadORG(Recer, ThreadPriority.Lowest); //new SEThread(Recer);
+            LGT = Dispatcher.CreateThread(Recer, ThreadPriority.Lowest,true); //new SEThread(Recer);
             //LGT.Priority = ThreadPriority.Lowest;
             LGT.Start();
         }

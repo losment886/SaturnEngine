@@ -119,7 +119,7 @@ namespace SaturnEngine.Asset
         public const string PT_Ext_PTH = "{0}/{1}.lrl.ext";
         public const string LRL_Default_Box_Name = "LRL.Box";
         public const string LRL_Default_Box_Name_R = "LRL.Box{0}";
-        public readonly VERSION LRLVersion = new VERSION(new Version(2, 0, 0, 2)); // LosResourcesLib Version
+        public readonly VERSION LRLVersion = new VERSION(new Version(2, 0, 0, 4)); // LosResourcesLib Version
         public readonly byte[] TREE_B = [0x4C, 0x52, 0x54, 0x52]; // LRTR
         public readonly byte[] TREE_PAGE_B = [0x4C, 0x52, 0x50, 0x47]; // LRPG
 
@@ -700,7 +700,7 @@ namespace SaturnEngine.Asset
         LRLHead Head;
         byte[]? exts;
         List<LRLExtDataLists.LRL_Ext_Def> ExtDataList = new List<LRLExtDataLists.LRL_Ext_Def>();
-        
+        bool loadhalf = false;
         public void LoadFromStream(Stream s, long stoffset = 0, string? Password = null)
         {
             
@@ -728,8 +728,10 @@ namespace SaturnEngine.Asset
             }
             ProcessFlags();
             fromStream = true;
+            loadhalf = true;
             UnLock(Password);
             LoadExt();
+            loadhalf = false;
             Loaded = true;
         }
 
@@ -763,9 +765,10 @@ namespace SaturnEngine.Asset
                 }
                 ProcessFlags();
                 fromStream = false;
+                loadhalf = true;
                 UnLock(Password);
                 LoadExt();
-                
+                loadhalf = false;
                 Loaded = true;
             }
             else 
@@ -778,8 +781,12 @@ namespace SaturnEngine.Asset
 
         public void ContinueLoading()
         {
-            CheckUnLock();
-            LoadExt();
+            if(loadhalf)
+            {
+                CheckUnLock();
+                LoadExt();
+                loadhalf = false;
+            }
         }
 
 
@@ -803,6 +810,8 @@ namespace SaturnEngine.Asset
             }
         }
         SEMSV? sv = null;
+        //保证安全性的代码有点难写，暂时先明文存放，后期完善
+        byte[]? svb = null;
         bool VerifyPassword(string password)
         {
             //在此是默认是加载且加密的，如果在没加密时调用此方法，可能会有奇怪的输出
@@ -829,7 +838,10 @@ namespace SaturnEngine.Asset
             {
                 return false;
             }
-            sv = new SEMSV(ob, null);
+            svb = new byte[svc.Length];
+            svc.CopyTo(svb, 0);
+            sv = new SEMSV();
+            powerToken.Value = sv.Init(svc);
 
             return true;
         }
@@ -912,6 +924,39 @@ namespace SaturnEngine.Asset
         {
 
         }
+
+        ThreadLocal<ulong> powerToken = new ThreadLocal<ulong>(() => 0);
+
+        /// <summary>
+        /// 获取访问令牌，储存在内部。
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void CreateAccessToken()
+        {
+            if (!Encrypted)
+                return;
+
+            CheckUnLock();
+            if (sv == null)
+            {
+                throw new InvalidOperationException("未初始化，无法创建访问令牌".GetInCurrLang());
+            }
+
+            //ulong tk = 0;
+            if(powerToken.Value == 0)
+            {
+                //not administrator
+
+                //向创建线程申请临时访问。
+
+            }
+
+
+            
+        }
+        
+
+
 
 
     }

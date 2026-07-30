@@ -112,6 +112,137 @@ namespace Windows_Test_Project
             //SELogger.Input();
             SELogger.Log("初始化主机");
             GameHost gh = new GameHost();
+
+            //============ 线程调度性能对比测试 ============
+            const int BENCH_THREADS = 32;       // 测试线程
+            const double BENCH_SECONDS = 10;   // 每轮测试时长（秒）
+
+            long[] counters = new long[BENCH_THREADS];
+            bool benchRunning = false;
+
+
+            ThreadPriority[] tps = new ThreadPriority[BENCH_THREADS];
+
+            SELogger.Log($"线程调度性能测试: {BENCH_THREADS}线程, 每轮{BENCH_SECONDS}秒");
+            SELogger.Log("线程优先级分配:");
+            for(int i = 0; i < BENCH_THREADS; i++)
+            {
+                int tl = Random.Shared.Next(0, 6);
+                if (tl >= 4)
+                {
+                    tps[i] = ThreadPriority.Highest;
+                }
+                else
+                {
+                    tps[i] = (ThreadPriority)tl;
+                }
+                SELogger.Log($"  线程{i}: 优先级 {tps[i]}");
+            }
+
+
+            // 统一的负载算法：浮点密集运算，统计迭代次数
+            ThreadStart MakeWorker(int idx) => () =>
+            {
+                double x = idx + 1.0;
+                long local = 0;
+                while (Volatile.Read(ref benchRunning))
+                {
+                    for (int n = 0; n < 10000; n++)
+                    {
+                        x = Math.Sqrt(x * 1.0000001 + 1.0) + Math.Sin(x) * 0.5;
+                    }
+                    local += 10000;
+                    counters[idx] = local;
+                }
+            };
+
+            // 构建"大核到小核"的逻辑线程顺序：高频 > X3D > 普通 > 能效 > LPE > 未知
+            List<int> BuildBigToSmallCoreOrder()
+            {
+                var order = new List<(int tid, int rank)>();
+                int li = 0;
+                for (int k = 0; k < Dispatcher.CPUCoreCount && li < Dispatcher.CPUThreadCount; k++)
+                {
+                    int type = Dispatcher.DefCore[k];
+                    bool ht = type != 0 && type % 2 == 0; // 偶数=有超线程
+                    int rank = type switch
+                    {
+                        3 or 4 => 5,   // 高频性能核
+                        7 or 8 => 4,   // X3D大三缓核
+                        1 or 2 => 3,   // 普通性能核
+                        5 or 6 => 2,   // 能效核
+                        9 or 10 => 1,  // LPE核
+                        _ => 0
+                    };
+                    order.Add((li++, rank));
+                    if (ht && li < Dispatcher.CPUThreadCount)
+                        order.Add((li++, rank));
+                }
+                // 拓扑没覆盖到的逻辑线程补齐
+                while (li < Dispatcher.CPUThreadCount)
+                    order.Add((li++, 0));
+                return order.OrderByDescending(o => o.rank).Select(o => o.tid).ToList();
+            }
+            List<int> coreOrder = BuildBigToSmallCoreOrder();
+
+            // 执行一轮测试：threadCount个线程，factory(worker, 槽位) 创建线程，返回总分（百万次运算/秒）
+            double RunBench(int threadCount, Func<ThreadStart, int, SEThread> factory)
+            {
+                Array.Clear(counters, 0, counters.Length);
+                Volatile.Write(ref benchRunning, true);
+
+                SEThread[] ths = new SEThread[threadCount];
+                for (int i = 0; i < threadCount; i++)
+                    ths[i] = factory(MakeWorker(i), i);
+                for (int i = 0; i < threadCount; i++)
+                    ths[i].Start();
+
+                Thread.Sleep((int)(BENCH_SECONDS * 1000));
+                Volatile.Write(ref benchRunning, false);
+
+                for (int i = 0; i < threadCount; i++)
+                    ths[i]._Main.Join();
+
+                long total = 0;
+                for (int i = 0; i < threadCount; i++)
+                    total += counters[i];
+                Thread.Sleep(1000); // 冷却，让系统负载采样归零
+                return total / BENCH_SECONDS / 1_000_000.0;
+            }
+
+            // 测试一种模式：先单核分，再16线程综合分
+            void BenchMode(string name, Func<ThreadStart, int, SEThread> factory)
+            {
+                Console.WriteLine($"----- {name} -----");
+                double single = RunBench(1, factory);
+                Console.WriteLine($"  单核分数    : {single:F2}");
+                Thread.Sleep(1000);
+                double multi = RunBench(BENCH_THREADS, factory);
+                Console.WriteLine($"  {BENCH_THREADS}线程综合分: {multi:F2}  (多核加速比 x{multi / single:F2})");
+                Thread.Sleep(1000);
+            }
+
+            Console.WriteLine("============ 线程调度性能测试 ============");
+            Console.WriteLine($"CPU核心数: {Dispatcher.CPUCoreCount}  逻辑线程数: {Dispatcher.CPUThreadCount}");
+            Console.WriteLine($"固定核心分配顺序(大核->小核): {string.Join(",", coreOrder.Take(BENCH_THREADS))}");
+
+            // ① 系统调度：CreateThreadORG，不设亲和性，完全交给操作系统
+            BenchMode("系统调度 (CreateThreadORG)",
+                (ts, i) => Dispatcher.CreateThreadORG(ts, tps[i]));
+
+            // ② 固定核心：CreateThread(ts, tp, tid)，按大核到小核排开
+            BenchMode("固定核心 大核->小核 (CreateThread tid)",
+                (ts, i) => Dispatcher.CreateThread(ts, tps[i], coreOrder[i % coreOrder.Count]));
+
+            // ③ 引擎调度：CreateThread(ts, tp, Moveable)，自动选核+动态迁移
+            BenchMode("引擎调度 (CreateThread Moveable)",
+                (ts, i) => Dispatcher.CreateThread(ts, tps[i], true, false));
+
+            Console.WriteLine("============ 测试结束 ============");
+
+            Console.ReadLine();
+
+
             SELogger.Log("启用无线调试");
             SENLTcpHostConfig hc = new SENLTcpHostConfig();
             hc.HostName = "DebuggerHost";
