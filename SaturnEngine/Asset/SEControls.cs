@@ -1,6 +1,7 @@
 ﻿using SaturnEngine.Base;
 using SaturnEngine.SEInput;
 using SaturnEngine.SEMath;
+using System;
 
 namespace SaturnEngine.Asset
 {
@@ -31,20 +32,33 @@ namespace SaturnEngine.Asset
         /// <param name="allowh">是否允许水平布局</param>
         private void FM(SEControl[] curr, SERect frange, bool allowh = false)
         {
-            //Vector2D currentPos = new Vector2D(frange[0][0], frange[0][1]); // 当前布局位置LT
-            //Vector2D currentPosR = new Vector2D(frange[1][0], frange[0][1]); // 当前布局位置RT
+            // 按 ZOrder 稳定排序（LINQ OrderBy 是稳定的）
+            var sortedControls = curr.OrderBy(c => c.ZOrder).ToArray();
+
             double currTopY = frange[0][1];
             double currBottomY = frange[1][1];
             double currLeftTX = frange[0][0];
             double currRightTX = frange[1][0];
             double currLeftBX = frange[0][0];
             double currRightBX = frange[1][0];
-            //double maxXInRow = 0; // 当前行最大X
-            //double maxYInCol = 0; // 当前列最大Y
 
-            for (int i = 0; i < curr.Length; i++)
+            // 换行换列跟踪
+            double maxHeightInRow = 0; // 当前行最大高度
+            double maxWidthInCol = 0; // 当前列最大宽度
+
+            double rowStartY = currTopY;     // 当前行起始Y
+            double colStartX = currLeftTX;   // 当前列起始X
+
+            for (int i = 0; i < sortedControls.Length; i++)
             {
-                var c = curr[i];
+                var c = sortedControls[i];
+
+                // 跳过不可见控件的布局计算
+                if (!c.Visible)
+                {
+                    c.Position = null;
+                    continue;
+                }
 
                 Vector2D controlSize = c.Size;
                 SERect controlRect = new SERect([new Vector2D(0, 0), new Vector2D(0, 0)]);
@@ -56,23 +70,56 @@ namespace SaturnEngine.Asset
                     case SEAnchor.LeftTop:
                         if (allowh)
                         {
+                            // 水平布局：检查是否超出宽度需要换行
+                            double requiredWidth = c.Border.Left + c.Size.X + c.Border.Right;
+                            if (currLeftTX + requiredWidth > frange[1][0] && currLeftTX > colStartX)
+                            {
+                                // 换行
+                                currTopY = rowStartY + maxHeightInRow;
+                                rowStartY = currTopY;
+                                currLeftTX = colStartX;
+                                maxHeightInRow = 0;
+                            }
+
                             controlRect = new SERect([[currLeftTX + c.Border.Left, currTopY + c.Border.Top], [currLeftTX + c.Border.Left + c.Size.X, currTopY + c.Border.Top + c.Size.Y]]);
                             currLeftTX += c.Border.Left + c.Size.X + c.Border.Right;
-
+                            maxHeightInRow = Math.Max(maxHeightInRow, c.Border.Top + c.Size.Y + c.Border.Bottom);
                         }
                         else
                         {
+                            // 垂直布局：检查是否超出高度需要换列
+                            double requiredHeight = c.Border.Top + c.Size.Y + c.Border.Bottom;
+                            if (currTopY + requiredHeight > frange[1][1] && currTopY > rowStartY)
+                            {
+                                // 换列
+                                currLeftTX = colStartX + maxWidthInCol;
+                                colStartX = currLeftTX;
+                                currTopY = rowStartY;
+                                maxWidthInCol = 0;
+                            }
+
                             controlRect = new SERect([[currLeftTX + c.Border.Left, currTopY + c.Border.Top], [currLeftTX + c.Border.Left + c.Size.X, currTopY + c.Border.Top + c.Size.Y]]);
                             currTopY += c.Border.Top + c.Size.Y + c.Border.Bottom;
+                            maxWidthInCol = Math.Max(maxWidthInCol, c.Border.Left + c.Size.X + c.Border.Right);
                         }
                         break;
 
                     case SEAnchor.RightTop:
                         if (allowh)
                         {
+                            double requiredWidth = c.Border.Left + c.Size.X + c.Border.Right;
+                            if (currRightTX - requiredWidth < frange[0][0] && currRightTX < frange[1][0])
+                            {
+                                // 换行
+                                currTopY = rowStartY + maxHeightInRow;
+                                rowStartY = currTopY;
+                                currRightTX = frange[1][0];
+                                maxHeightInRow = 0;
+                            }
+
                             controlRect = new SERect([[currRightTX - c.Border.Right - c.Size.X, currTopY + c.Border.Top], [currRightTX - c.Border.Right, currTopY + c.Border.Top + c.Size.Y]]);
                             currRightTX -= c.Border.Left + c.Size.X + c.Border.Right;
-
+                            maxHeightInRow = Math.Max(maxHeightInRow, c.Border.Top + c.Size.Y + c.Border.Bottom);
                         }
                         else
                         {
@@ -84,9 +131,18 @@ namespace SaturnEngine.Asset
                     case SEAnchor.LeftBottom:
                         if (allowh)
                         {
+                            double requiredWidth = c.Border.Left + c.Size.X + c.Border.Right;
+                            if (currLeftBX + requiredWidth > frange[1][0] && currLeftBX > frange[0][0])
+                            {
+                                // 换行（从底部向上）
+                                currBottomY -= maxHeightInRow;
+                                currLeftBX = frange[0][0];
+                                maxHeightInRow = 0;
+                            }
+
                             controlRect = new SERect([[currLeftBX + c.Border.Left, currBottomY - c.Border.Bottom - c.Size.Y], [currLeftBX + c.Border.Left + c.Size.X, currBottomY - c.Border.Bottom]]);
                             currLeftBX += c.Border.Left + c.Size.X + c.Border.Right;
-
+                            maxHeightInRow = Math.Max(maxHeightInRow, c.Border.Top + c.Size.Y + c.Border.Bottom);
                         }
                         else
                         {
@@ -98,9 +154,18 @@ namespace SaturnEngine.Asset
                     case SEAnchor.RightBottom:
                         if (allowh)
                         {
+                            double requiredWidth = c.Border.Left + c.Size.X + c.Border.Right;
+                            if (currRightBX - requiredWidth < frange[0][0] && currRightBX < frange[1][0])
+                            {
+                                // 换行（从底部向上）
+                                currBottomY -= maxHeightInRow;
+                                currRightBX = frange[1][0];
+                                maxHeightInRow = 0;
+                            }
+
                             controlRect = new SERect([[currRightBX - c.Border.Right - c.Size.X, currBottomY - c.Border.Bottom - c.Size.Y], [currRightBX - c.Border.Right, currBottomY - c.Border.Bottom]]);
                             currRightBX -= c.Border.Left + c.Size.X + c.Border.Right;
-
+                            maxHeightInRow = Math.Max(maxHeightInRow, c.Border.Top + c.Size.Y + c.Border.Bottom);
                         }
                         else
                         {
@@ -109,12 +174,11 @@ namespace SaturnEngine.Asset
                         }
                         break;
 
-
                 }
 
                 c.Position = controlRect;
 
-                // 递归处理子控件
+                // 递归处理子控件（跳过不可见控件的子树）
                 if (c.Child != null && c.Child.Length > 0)
                 {
                     // 使用当前控件的位置作为子控件的父范围
@@ -222,8 +286,10 @@ namespace SaturnEngine.Asset
 
 
     }
-    public abstract class SEControl : SEBase, IUpdateLoop
+    public abstract class SEControl : SEBase, IUpdateLoop, IDisposable
     {
+        private bool _disposed = false;
+
         public SEControl(string nm = "control", string desc = "NULL")
             : base(nm, desc)
         {
@@ -232,8 +298,16 @@ namespace SaturnEngine.Asset
             Bind = SEAnchor.LeftTop;
             AllowHorizontalLayout = false;
 
+            // 新增字段默认值
+            Visible = true;
+            Opacity = 1.0;
+            ZOrder = 0;
+            Tint = SEColor.White;
+            Enabled = true;
+
             BasicInput.OnKeyInput += OnKeyInputEvent;
         }
+
         public SESpirit? Spirit;
         public SEControl? Parent;
         public SEControl[]? Child;
@@ -243,8 +317,50 @@ namespace SaturnEngine.Asset
         public bool AllowHorizontalLayout;//是否允许子控件水平布局，否则垂直布局，默认false，仅针对子控件，在横向排布时，超出宽度则换行，在纵向排布时，超出高度则换列
         public SERect? Position;//由布局引擎设置，表示相对渲染窗口的绝对位置，左上与右下
         public double Angle;//渲染图元旋转角
+
+        // 新增字段：透明度、可见性、层级、着色、启用状态
+        public bool Visible;
+        public double Opacity; // 0.0 - 1.0
+        public int ZOrder;
+        public SEColor Tint;
+        public bool Enabled;
+
+        /// <summary>
+        /// 获取沿父链累积的有效透明度
+        /// </summary>
+        public double GetEffectiveOpacity()
+        {
+            double opacity = Opacity;
+            SEControl? current = Parent;
+            while (current != null)
+            {
+                opacity *= current.Opacity;
+                current = current.Parent;
+            }
+            return opacity;
+        }
+
         public abstract void Update(double deltaTime);
         public abstract void OnKeyInputEvent(Keys key,bool enbale);
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // 退订事件，避免泄漏
+                    BasicInput.OnKeyInput -= OnKeyInputEvent;
+                }
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         public delegate void PVoid();
         public delegate void PKeys(Keys s);

@@ -22,6 +22,10 @@ namespace SaturnEngine.Asset
         public static readonly SEColor Magenta = (new Vector3D(1, 0, 1));
         public static readonly SEColor Yellow = (new Vector3D(1, 1, 0));
         public static readonly SEColor White = (new Vector3D(1, 1, 1));
+        /// <summary>
+        /// 全透明黑，供 UI 控件作为默认无背景色使用
+        /// </summary>
+        public static readonly SEColor Transparent = new SEColor(0, 0, 0, 0);
 
 
 

@@ -67,12 +67,75 @@
 #endif
 
 
-#ifdef _WIN32
-    #include <windows.h>
+// ============================================================
+// 平台检测宏
+// 顺序要求：HarmonyOS(OHOS) 与 Android 都会定义 __linux__，
+// 因此必须先判定 __OHOS__ / __ANDROID__，最后才落到 Linux。
+// ============================================================
+#if defined(_WIN32) || defined(_WIN64)
+    #define SE_PLATFORM_WINDOWS 1
+#elif defined(__OHOS__) || defined(OHOS_PLATFORM)
+    #define SE_PLATFORM_OHOS 1
+#elif defined(__ANDROID__)
+    #define SE_PLATFORM_ANDROID 1
 #elif defined(__APPLE__)
     #include <TargetConditionals.h>
-
+    #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+        #define SE_PLATFORM_IOS 1
+    #else
+        #define SE_PLATFORM_MACOS 1
+    #endif
 #elif defined(__linux__)
+    #define SE_PLATFORM_LINUX 1
+#endif
+
+// 是否为移动/嵌入式平台（无 Vulkan loader 静态库，必须动态加载）
+#if defined(SE_PLATFORM_ANDROID) || defined(SE_PLATFORM_IOS) || defined(SE_PLATFORM_OHOS)
+    #define SE_PLATFORM_MOBILE 1
+#endif
+
+// ============================================================
+// Vulkan 平台 surface 扩展分发
+// 在包含 <vulkan/vulkan.h> 之前必须定义好这些宏
+// ============================================================
+#if defined(SE_PLATFORM_WINDOWS)
+    #ifndef VK_USE_PLATFORM_WIN32_KHR
+        #define VK_USE_PLATFORM_WIN32_KHR 1
+    #endif
+#elif defined(SE_PLATFORM_ANDROID)
+    #ifndef VK_USE_PLATFORM_ANDROID_KHR
+        #define VK_USE_PLATFORM_ANDROID_KHR 1
+    #endif
+#elif defined(SE_PLATFORM_OHOS)
+    #ifndef VK_USE_PLATFORM_OHOS_OPENHARMONY
+        #define VK_USE_PLATFORM_OHOS_OPENHARMONY 1
+    #endif
+#elif defined(SE_PLATFORM_IOS)
+    #ifndef VK_USE_PLATFORM_IOS_MVK
+        #define VK_USE_PLATFORM_IOS_MVK 1
+    #endif
+    #ifndef VK_USE_PLATFORM_METAL_EXT
+        #define VK_USE_PLATFORM_METAL_EXT 1
+    #endif
+#elif defined(SE_PLATFORM_MACOS)
+    #ifndef VK_USE_PLATFORM_MACOS_MVK
+        #define VK_USE_PLATFORM_MACOS_MVK 1
+    #endif
+    #ifndef VK_USE_PLATFORM_METAL_EXT
+        #define VK_USE_PLATFORM_METAL_EXT 1
+    #endif
+#elif defined(SE_PLATFORM_LINUX)
+    #ifndef VK_USE_PLATFORM_XLIB_KHR
+        #define VK_USE_PLATFORM_XLIB_KHR 1
+    #endif
+    #ifndef VK_USE_PLATFORM_WAYLAND_KHR
+        #define VK_USE_PLATFORM_WAYLAND_KHR 1
+    #endif
+#endif
+
+#if defined(SE_PLATFORM_WINDOWS)
+    #include <windows.h>
+#elif defined(SE_PLATFORM_LINUX)
     #include <X11/Xlib.h>
     #include <X11/Xutil.h>
 #endif
@@ -222,6 +285,19 @@ NRResult nr_OnError(NRResult result);
 
 #define NRR_STEP_VK_CreateShaderModule 20
 
+#define NRR_STEP_NR_CreateDevice 30
+#define NRR_STEP_NR_CreateSwapchain 31
+#define NRR_STEP_NR_CreateBuffer 32
+#define NRR_STEP_NR_CreateImage 33
+#define NRR_STEP_NR_CreatePipeline 34
+#define NRR_STEP_NR_CreateDescriptor 35
+#define NRR_STEP_NR_CreateMesh 36
+#define NRR_STEP_NR_CreateTexture 37
+#define NRR_STEP_NR_CreateMaterial 38
+#define NRR_STEP_NR_Scene 39
+#define NRR_STEP_NR_PostProcess 40
+#define NRR_STEP_NR_Particle 41
+
 #define NRR_CODE_SUCCESS 0
 #define NRR_CODE_ALREADY_INITIALIZED 1
 #define NRR_CODE_NOT_INITIALIZED 2
@@ -252,6 +328,11 @@ NRResult nr_OnError(NRResult result);
 #define NRR_CODE_PRESENT_FAILED 27
 #define NRR_CODE_INVALID_PARAMETER 28
 #define NRR_CODE_NOT_IMPLEMENTED 29
+#define NRR_CODE_INVALID_HANDLE 30
+#define NRR_CODE_UNSUPPORTED_PLATFORM 31
+#define NRR_CODE_FILE_NOT_FOUND 32
+#define NRR_CODE_CAPACITY_EXCEEDED 33
+#define NRR_CODE_DEVICE_LOST 34
 
 
 #define NRV_Make(major, minor, patch, user) (((u64)(major) << 48) | ((u64)(minor) << 32) | ((u64)(patch) << 16) | (user))

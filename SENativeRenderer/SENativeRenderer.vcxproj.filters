@@ -22,6 +22,48 @@
     <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRVA.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRVkLoader.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRDevice.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMemory.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRSwapchain.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRDescriptor.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRPipeline.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRShaderc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMesh.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMaterial.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMath.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRScene.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRPostProcess.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRParticle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRFrame.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDefine.h">
@@ -40,6 +82,54 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRApi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRVkLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRSwapchain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDescriptor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRPipeline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderLib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMaterial.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRPostProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRParticle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

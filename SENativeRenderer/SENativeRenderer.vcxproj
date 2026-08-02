@@ -92,22 +92,23 @@
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <ExceptionHandling>
-      </ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SE_BUILD_SHARED;CMAKE_INTDIR="Debug";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR="Debug";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;SE_BUILD_SHARED;CMAKE_INTDIR=\"Debug\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR=\"Debug\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>J:\SaturnEngine\SENativeRenderer;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -137,7 +138,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\shaderc_combined.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -155,24 +156,25 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalIncludeDirectories>J:\SaturnEngine\SENativeRenderer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /external:I "C:/VulkanSDK/1.4.341.1/Include" /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <ExceptionHandling>
-      </ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;CMAKE_INTDIR="Release";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR="Release";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;CMAKE_INTDIR=\"Release\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR=\"Release\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>J:\SaturnEngine\SENativeRenderer;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -202,7 +204,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\shaderc_combined.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -220,24 +222,25 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalIncludeDirectories>J:\SaturnEngine\SENativeRenderer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /external:I "C:/VulkanSDK/1.4.341.1/Include" /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <ExceptionHandling>
-      </ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <Optimization>MinSpace</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;CMAKE_INTDIR="MinSizeRel";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR="MinSizeRel";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;CMAKE_INTDIR=\"MinSizeRel\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR=\"MinSizeRel\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>J:\SaturnEngine\SENativeRenderer;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -267,7 +270,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\shaderc_combined.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -286,22 +289,23 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalOptions>%(AdditionalOptions) /external:I "C:/VulkanSDK/1.4.341.1/Include" /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <ExceptionHandling>
-      </ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;CMAKE_INTDIR="RelWithDebInfo";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR="RelWithDebInfo";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;CMAKE_INTDIR=\"RelWithDebInfo\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;SE_BUILD_SHARED;NR_HAS_SHADERC;CMAKE_INTDIR=\"RelWithDebInfo\";SENativeRenderer_EXPORTS</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>J:\SaturnEngine\SENativeRenderer;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
@@ -331,7 +335,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\shaderc_combined.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\SDL3.lib;user32.lib;gdi32.lib;shell32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -409,12 +413,42 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRRenderData.c" />
     <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRGlobal.c" />
     <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRVA.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRVkLoader.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRDevice.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMemory.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRSwapchain.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRDescriptor.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRPipeline.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRShaderc.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMesh.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMaterial.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRMath.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRScene.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRPostProcess.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRParticle.c" />
+    <ClCompile Include="J:\SaturnEngine\SENativeRenderer\NRFrame.c" />
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDefine.h" />
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRTypedef.h" />
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRVec.h" />
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRRenderData.h" />
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderCompiler.h" />
     <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderSource.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRApi.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRVkLoader.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDevice.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMemory.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRSwapchain.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRDescriptor.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRPipeline.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderc.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRShaderLib.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMesh.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMaterial.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRMath.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRScene.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRPostProcess.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRParticle.h" />
+    <ClInclude Include="J:\SaturnEngine\SENativeRenderer\NRFrame.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="J:\SaturnEngine\SENativeRenderer\ZERO_CHECK.vcxproj">

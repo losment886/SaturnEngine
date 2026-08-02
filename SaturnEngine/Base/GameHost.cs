@@ -79,6 +79,8 @@ namespace SaturnEngine.Base
                     int index = Games.IndexOf(g);
                     if (Loaded[index] == false)
                     {
+                        // 窗口属性与 UI 场景都在 Game.Initialize 中配置，必须先于窗口创建执行
+                        g.Initialize();
                         g.ThisWindow.Initialize();
                         g.ThisWindow.CreateWindow();
                         g.ThisWindow.RunWindow();
@@ -115,6 +117,7 @@ namespace SaturnEngine.Base
                         int index = Games.IndexOf(g);
                         if (Loaded[index] == false)
                         {
+                            g.Initialize();
                             g.ThisWindow.Initialize();
                             g.ThisWindow.CreateWindow();
                             g.ThisWindow.RunWindow();
@@ -154,11 +157,16 @@ namespace SaturnEngine.Base
                 MainThreadQueue.InvokeAll();
                 
                 
-                
+                if(GVariables.MainWindows.Count <= 0)
+                {
+                    SELogger.Warn("没有窗口存在，主线程将退出".GetInCurrLang(), "GameHost");
+                    GVariables.EngineRunning = false;
+
+                }
                 
                 MainThread.WaitForFPS();
             }
-
+            GVariables.OnClose();
         }
     }
 }

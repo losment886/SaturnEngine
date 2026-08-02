@@ -19,6 +19,7 @@ using SaturnEngine.SEGraphics;
 using SaturnEngine.SEInput;
 using SaturnEngine.SEMath;
 using SaturnEngine.SEUI;
+using SaturnEngine.SEUI.Render;
 using SaturnEngine.SEUIControls;
 using SaturnEngine.ScriptEngine;
 using System.Threading;

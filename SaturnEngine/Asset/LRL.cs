@@ -699,8 +699,25 @@ namespace SaturnEngine.Asset
 
         LRLHead Head;
         byte[]? exts;
+        /// <summary>
+        /// 扩展数据列表，存放LRL文件的扩展数据
+        /// </summary>
         List<LRLExtDataLists.LRL_Ext_Def> ExtDataList = new List<LRLExtDataLists.LRL_Ext_Def>();
+        /// <summary>
+        /// 是否正在进行半加载，半加载时，LRL文件已读取头部，但未读取扩展数据，调用ContinueLoading()可继续加载扩展数据
+        /// </summary>
         bool loadhalf = false;
+
+
+        /// <summary>
+        /// 文件树，存放LRL文件的文件结构
+        /// </summary>
+        LRLBPlusTree filetree;
+        /// <summary>
+        /// 目录树，存放LRL文件的目录结构
+        /// </summary>
+        LRLBPlusTree diectorytree;
+
         public void LoadFromStream(Stream s, long stoffset = 0, string? Password = null)
         {
             
@@ -955,7 +972,7 @@ namespace SaturnEngine.Asset
             
         }
         
-
+        
 
 
 

@@ -125,10 +125,13 @@ namespace SaturnEngine.Asset
                     c = new CollisionBox2D();
                     break;
                 case SEComponentType.CollisionBox3D:
-                    //c = new CollisionBox3D();
-                    throw new Exception("无法创建该类型组件".GetInCurrLang());
+                    c = new CollisionBox3D();
+                    break;
                 case SEComponentType.Controller2D:
                     c = new Controller2D();
+                    break;
+                case SEComponentType.Controller3D:
+                    c = new Controller3D();
                     break;
                 default:
                     throw new Exception("无法创建该类型组件".GetInCurrLang());

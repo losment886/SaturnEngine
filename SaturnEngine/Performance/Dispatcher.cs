@@ -171,7 +171,7 @@ namespace SaturnEngine.Performance
                 {
                     if (WindowsAPI.SetWaitableTimerEx(WShandle, WindowsAPI.GetFileTime(s), 0, null, default, 0, 0))
                     {
-                        WindowsAPI.WaitForSingleObject(WShandle, uint.MaxValue);
+                        WindowsAPI.WaitForSingleObject(WShandle, 20000);
                     }
                     else
                     {
@@ -220,8 +220,12 @@ namespace SaturnEngine.Performance
         }
         public void Dispose()
         {
-            sw.Stop();
-            sw = null;
+            try
+            {
+                sw.Stop();
+                sw = null;
+            }
+            catch { }
             if (GVariables.OS == OS.Windows)
                 if (WShandle != nint.Zero)
                     WindowsAPI.CloseHandle(WShandle);
@@ -1868,12 +1872,6 @@ namespace SaturnEngine.Performance
             SetCpuTopologyDefCore((int)cmp.NumberOfCores, (int)cmp.NumberOfLogicalProcessors);
             GVariables.OnEngineClose += OnCLe;
 
-
-            SELogger.Log("显示CPU信息");
-            for(int i =0;i < DefCore.Length;i++)
-            {
-                SELogger.Log($"核心{i}类型:{DefCore[i]}");
-            }
 
             DispatcherWorkerThread = CreateThreadORG(DispatcherWorker, ThreadPriority.Normal);
             DispatcherWorkerThread.Start();  // 启动调度器线程

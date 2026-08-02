@@ -119,6 +119,45 @@ message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 
 # ============================================================
+# 查找 shaderc（可选，用于运行时 GLSL -> SPIR-V 编译）
+# shaderc 随 Vulkan SDK 分发；移动端需静态链接 shaderc_combined。
+# 未找到时不会中断构建：NRShaderc.c 会退化为“仅从磁盘缓存加载 SPIR-V”。
+# ============================================================
+option(SE_USE_SHADERC "Enable runtime GLSL compilation via shaderc" ON)
+
+set(SE_SHADERC_FOUND FALSE)
+if(SE_USE_SHADERC)
+  find_path(SHADERC_INCLUDE_DIR
+          NAMES shaderc/shaderc.h
+          HINTS
+          "${SE_VULKAN_INCLUDE_DIR}"
+          "${SE_VULKAN_INCLUDE_DIR}/.."
+          "$ENV{VULKAN_SDK}/Include"
+          "$ENV{VULKAN_SDK}/include"
+          PATH_SUFFIXES include Include
+  )
+
+  # 优先静态的 shaderc_combined：避免额外分发运行时依赖，移动端必需
+  find_library(SHADERC_LIBRARY
+          NAMES shaderc_combined shaderc_combinedd shaderc_shared shaderc
+          HINTS
+          "${SE_VULKAN_INCLUDE_DIR}/../Lib"
+          "${SE_VULKAN_INCLUDE_DIR}/../lib"
+          "$ENV{VULKAN_SDK}/Lib"
+          "$ENV{VULKAN_SDK}/lib"
+          PATH_SUFFIXES lib Lib
+  )
+
+  if(SHADERC_INCLUDE_DIR AND SHADERC_LIBRARY)
+    set(SE_SHADERC_FOUND TRUE)
+    message(STATUS "[SENativeRenderer] shaderc found: ${SHADERC_LIBRARY}")
+  else()
+    message(WARNING "[SENativeRenderer] shaderc NOT found - runtime GLSL compilation disabled; "
+                    "only precompiled SPIR-V from the shader cache will be usable.")
+  endif()
+endif()
+
+# ============================================================
 # 源文件 C
 # ============================================================
 set(SE_RENDERER_SOURCES
@@ -129,6 +168,21 @@ set(SE_RENDERER_SOURCES
         NRRenderData.c
         NRGlobal.c
         NRVA.c
+        # ---- 原生 Vulkan 后端 ----
+        NRVkLoader.c
+        NRDevice.c
+        NRMemory.c
+        NRSwapchain.c
+        NRDescriptor.c
+        NRPipeline.c
+        NRShaderc.c
+        NRMesh.c
+        NRMaterial.c
+        NRMath.c
+        NRScene.c
+        NRPostProcess.c
+        NRParticle.c
+        NRFrame.c
 )
 
 set(SE_RENDERER_HEADERS
@@ -138,6 +192,23 @@ set(SE_RENDERER_HEADERS
         NRRenderData.h
         NRShaderCompiler.h
         NRShaderSource.h
+        # ---- 原生 Vulkan 后端 ----
+        NRApi.h
+        NRVkLoader.h
+        NRDevice.h
+        NRMemory.h
+        NRSwapchain.h
+        NRDescriptor.h
+        NRPipeline.h
+        NRShaderc.h
+        NRShaderLib.h
+        NRMesh.h
+        NRMaterial.h
+        NRMath.h
+        NRScene.h
+        NRPostProcess.h
+        NRParticle.h
+        NRFrame.h
         )
 
 # ============================================================
@@ -191,6 +262,15 @@ endif()
 
 if(SDL3_FOUND)
   target_include_directories(${PROJECT_NAME} PRIVATE ${SDL3_INCLUDE_DIR})
+endif()
+
+# shaderc：仅在找到时定义 NR_HAS_SHADERC 并链接
+if(SE_SHADERC_FOUND)
+  target_include_directories(${PROJECT_NAME} PRIVATE ${SHADERC_INCLUDE_DIR})
+  target_compile_definitions(${PROJECT_NAME} PRIVATE NR_HAS_SHADERC)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${SHADERC_LIBRARY})
+  # shaderc_combined 是 C++ 静态库，需要 C++ 标准库
+  set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 endif()
 
 # ============================================================

@@ -157,7 +157,7 @@ namespace SaturnEngine.SEGraphics
 
         ~SEWindow()
         {
-            GVariables.MainWindows.Remove(this);
+            //GVariables.MainWindows.Remove(this);
         }
         public WindowHostType HostType { get; set; }
         public GraphicsAPI RenderApi { get=>(GraphicsAPI)Attributes[SEWindowAttribute.Render_API]; internal set=>Attributes[SEWindowAttribute.Render_API] = value; }
@@ -231,7 +231,7 @@ namespace SaturnEngine.SEGraphics
         {
             rtw = false;
             OnClose();
-            //GVariables.MainWindows.Remove(this);
+            GVariables.MainWindows.Remove(this);
             
         }
 

@@ -213,10 +213,19 @@ SENativeRenderer_BINARY_DIR:STATIC=J:/SaturnEngine/SENativeRenderer
 SENativeRenderer_IS_TOP_LEVEL:STATIC=ON
 
 //Dependencies for the target
-SENativeRenderer_LIB_DEPENDS:STATIC=general;Vulkan::Vulkan;general;C:/VulkanSDK/1.4.341.1/Lib/SDL3.lib;general;user32;general;gdi32;general;shell32;
+SENativeRenderer_LIB_DEPENDS:STATIC=general;C:/VulkanSDK/1.4.341.1/Lib/shaderc_combined.lib;general;Vulkan::Vulkan;general;C:/VulkanSDK/1.4.341.1/Lib/SDL3.lib;general;user32;general;gdi32;general;shell32;
 
 //Value Computed by CMake
 SENativeRenderer_SOURCE_DIR:STATIC=J:/SaturnEngine/SENativeRenderer
+
+//Enable runtime GLSL compilation via shaderc
+SE_USE_SHADERC:BOOL=ON
+
+//Path to a file.
+SHADERC_INCLUDE_DIR:PATH=C:/VulkanSDK/1.4.341.1/Include
+
+//Path to a library.
+SHADERC_LIBRARY:FILEPATH=C:/VulkanSDK/1.4.341.1/Lib/shaderc_combined.lib
 
 //Path to a program.
 Vulkan_GLSLANG_VALIDATOR_EXECUTABLE:FILEPATH=C:/VulkanSDK/1.4.341.1/Bin/glslangValidator.exe

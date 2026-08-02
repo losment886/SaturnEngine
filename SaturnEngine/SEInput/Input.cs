@@ -44,6 +44,17 @@ namespace SaturnEngine.SEInput
         public static event DeviceConnected? OnDeviceConnected;
         public static event DeviceDisconnected? OnDeviceDisconnected;
 
+        /// <summary>
+        /// 由输入管理器在检测到设备接入时调用。
+        /// </summary>
+        /// <returns>无订阅者时默认返回 true，即接受该设备。</returns>
+        internal static bool RaiseDeviceConnected(InputDeviceInfo deviceInfo)
+            => OnDeviceConnected?.Invoke(deviceInfo) ?? true;
 
+        /// <summary>
+        /// 由输入管理器在检测到设备断开时调用。
+        /// </summary>
+        internal static void RaiseDeviceDisconnected(InputDeviceInfo deviceInfo)
+            => OnDeviceDisconnected?.Invoke(deviceInfo);
     }
 }

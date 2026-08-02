@@ -83,7 +83,7 @@ namespace SaturnEngine.Global
         public static bool AllowConsoleOutput = true;
 
 
-        public static WindowHostType CurrentWindowHostType = WindowHostType.Glfw;
+        public static WindowHostType CurrentWindowHostType = WindowHostType.SDL;
 
 
         public static List<SEBase> SEObjects = new List<SEBase>();

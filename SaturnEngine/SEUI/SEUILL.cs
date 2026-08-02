@@ -82,6 +82,43 @@ namespace SaturnEngine.SEUI
                 currvars++;
                 return $"ini_var_{currvars}";
             }
+            // 解析 <Animation> 子标签，为控件生成动画注册代码。
+            // 支持：Type=Sprite|Fade|Scale|Rotate|Tint，Duration、Mode、Easing、From/To、Frames。
+            string GenAnimation(string varname, SEUIElement e)
+            {
+                string code = "";
+
+                foreach (var child in e.Children)
+                {
+                    if (!string.Equals(child.TagName, "Animation", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    string type = child.Attributes.TryGetValue("Type", out var t) ? t : "Fade";
+                    string duration = child.Attributes.TryGetValue("Duration", out var d) ? d : "1.0";
+                    string mode = child.Attributes.TryGetValue("Mode", out var m) ? m : "Once";
+                    string easing = child.Attributes.TryGetValue("Easing", out var ea) ? ea : "Linear";
+                    string from = child.Attributes.TryGetValue("From", out var f) ? f : "0";
+                    string to = child.Attributes.TryGetValue("To", out var tv) ? tv : "1";
+
+                    string expr = type.ToLower() switch
+                    {
+                        // Frames 为逗号分隔的贴图变量名，Duration 在此表示单帧时长
+                        "sprite" => child.Attributes.TryGetValue("Frames", out var frames)
+                            ? $"new SEUISpriteAnimation({varname}, new SESpirit[]{{{frames}}}, {duration}, SEUIPlayMode.{mode})"
+                            : "",
+                        "scale" => $"new SEUIScaleAnimation({varname}, {from}, {to}, {duration}, SEUIEasing.{easing}, SEUIPlayMode.{mode})",
+                        "rotate" => $"new SEUIRotateAnimation({varname}, {from}, {to}, {duration}, SEUIEasing.{easing}, SEUIPlayMode.{mode})",
+                        "tint" => $"new SEUITintAnimation({varname}, new SEColor({from}), new SEColor({to}), {duration}, SEUIEasing.{easing}, SEUIPlayMode.{mode})",
+                        _ => $"new SEUIFadeAnimation({varname}, {from}, {to}, {duration}, SEUIEasing.{easing}, SEUIPlayMode.{mode})",
+                    };
+
+                    if (expr.Length > 0)
+                        code += $"SEUIAnimations.Default.Play({expr});\r\n";
+                }
+
+                return code;
+            }
+
             string GenOne(string? fname, string flstnm, string nm, string tagnm, string sz, SEMargin bor, SEAnchor bin, bool AllowHorl, SEUIElement e)
             {
                 
@@ -116,6 +153,23 @@ namespace SaturnEngine.SEUI
                     {
                         cs += $"{varname}.AllowHorizontalLayout = true;\r\n";
                     }
+
+                    // 通用外观属性：可见性、透明度、层级、着色
+                    if (e.Attributes.TryGetValue("Visible", out var visAttr))
+                        cs += $"{varname}.Visible = {visAttr.ToLower()};\r\n";
+                    if (e.Attributes.TryGetValue("Opacity", out var opaAttr))
+                        cs += $"{varname}.Opacity = {opaAttr};\r\n";
+                    if (e.Attributes.TryGetValue("ZOrder", out var zAttr))
+                        cs += $"{varname}.ZOrder = {zAttr};\r\n";
+                    if (e.Attributes.TryGetValue("Tint", out var tintAttr))
+                        cs += $"{varname}.Tint = new SEColor({tintAttr});\r\n";
+                    if (e.Attributes.TryGetValue("Enabled", out var enAttr))
+                        cs += $"{varname}.Enabled = {enAttr.ToLower()};\r\n";
+                    if (e.Attributes.TryGetValue("Angle", out var angAttr))
+                        cs += $"{varname}.Angle = {angAttr};\r\n";
+
+                    cs += GenAnimation(varname, e);
+
                     foreach (var tg in e.Attributes)
                     {
                         switch (tg.Key)
